@@ -197,32 +197,40 @@ def main():
 
 � **Após conectar, use /saldo para ver seus dados!**"""
                         else:
-                            # Modo offline - instruções manuais
+                            # Modo offline - instruções manuais com mais detalhes
                             text = """🏦 **Conectar Conta Bancária**
 
-🔧 **Serviço temporariamente em manutenção**
+🔧 **API Pluggy temporariamente indisponível**
 
-**Enquanto isso, você pode:**
+**📊 Status atual:**
+• ⚫ API Pluggy: Offline
+• ✅ Bot principal: Funcionando  
+• ✅ Banco de dados: Ativo
 
-📱 **Via App do seu banco:**
-1️⃣ Acesse o Open Banking no app
-2️⃣ Procure por "Pluggy" ou nosso serviço  
-3️⃣ Autorize o compartilhamento de dados
+**🛠️ Alternativas disponíveis:**
 
-💻 **Via Web:**
-• Acesse: https://pluggy.ai
-• Escolha seu banco e conecte
+📱 **Via App do banco (Open Banking):**
+1️⃣ Abra o app do seu banco
+2️⃣ Procure "Open Banking" ou "Compartilhar dados"
+3️⃣ Busque por "Pluggy" na lista de empresas
+4️⃣ Autorize o acesso aos seus dados
+5️⃣ Use /saldo após autorizar
 
-**Bancos principais:**
-🏦 Banco Inter • 💜 Nubank • 🔴 Bradesco
-🔶 Itaú • 🔴 Santander • 🟡 Banco do Brasil
-⚫ C6 Bank • 🟢 BTG Pactual • 📱 PicPay
-💰 XP Investimentos • 🏛️ Caixa
+💻 **Via Portal Pluggy:**
+🔗 https://pluggy.ai
+• Login direto no portal oficial
+• Conecte manualmente seu banco
 
-⚠️ **O serviço será normalizado em breve!**
-Tente novamente em alguns minutos.
+**📈 Funcionalidades offline disponíveis:**
+• `/despesas` - Cadastrar gastos manualmente
+• `/metas` - Definir objetivos financeiros  
+• `/resumo` - Ver análises dos dados locais
 
-💡 Use /saldo para verificar contas já conectadas."""
+**🔄 Verificar status:**
+• `/status` - Status em tempo real dos serviços
+
+⏱️ **Estimativa:** Normalização em algumas horas
+💡 O serviço será restaurado automaticamente."""
                         
                         await update.message.reply_text(text, parse_mode='Markdown')
                         
@@ -234,9 +242,44 @@ Tente novamente em alguns minutos.
                             "💡 Use /saldo para ver contas já conectadas."
                         )
                 
+                # Comando de status dos serviços
+                async def status_command(update, context):
+                    """Verificar status dos serviços"""
+                    user = await bot.get_or_create_user(update.effective_user)
+                    
+                    try:
+                        # Importar verificador de status
+                        from service_status import service_status
+                        
+                        # Mostrar loading
+                        loading_msg = await update.message.reply_text(
+                            "🔍 **Verificando status dos serviços...**\n⏳ Aguarde alguns segundos"
+                        )
+                        
+                        # Verificar todos os serviços
+                        status_results = await service_status.check_all_services()
+                        credentials_status = await service_status.check_pluggy_credentials()
+                        status_results.update(credentials_status)
+                        
+                        # Formatar resposta
+                        status_message = service_status.format_status_message(status_results)
+                        
+                        # Atualizar mensagem
+                        await loading_msg.edit_text(status_message, parse_mode='Markdown')
+                        
+                    except Exception as e:
+                        logger.error(f"Erro no comando status: {e}")
+                        await update.message.reply_text(
+                            "❌ **Erro ao verificar status**\n\n"
+                            "Tente novamente em alguns instantes.\n\n"
+                            "💡 **Status geral:** Bot funcionando normalmente\n"
+                            "🏦 **Conexão bancária:** Em verificação"
+                        )
+                
                 # Comandos principais
                 application.add_handler(CommandHandler("saldo", saldo_command))
                 application.add_handler(CommandHandler("conectar", conectar_command))
+                application.add_handler(CommandHandler("status", status_command))
                 
                 # Tentar adicionar outros comandos se existirem
                 try:

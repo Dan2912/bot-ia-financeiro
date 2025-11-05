@@ -419,12 +419,11 @@ Entre em contato com o suporte para reativar.
                 "🔒 **Conexão 100% segura e criptografada**\n"
                 "🏦 **Certificado pelo Banco Central**\n"
                 "📊 **Dados sincronizados em tempo real**\n\n"
-                "**Para conectar sua conta:**\n"
-                "1. Use o comando /conectar\n"
-                "2. Escolha seu banco\n"
-                "3. Faça login seguro via Pluggy\n"
-                "4. Autorize o acesso\n\n"
-                "💡 Suas credenciais ficam apenas no Pluggy, nunca conosco!"
+                "**Comandos disponíveis:**\n"
+                "• `/conectar` - Conectar nova conta\n"
+                "• `/status` - Verificar serviços\n"
+                "• `/saldo` - Ver contas conectadas\n\n"
+                "💡 **Processo seguro:** Suas credenciais ficam apenas no Pluggy!"
             )
         elif data == "manage_expenses":
             await query.edit_message_text(
