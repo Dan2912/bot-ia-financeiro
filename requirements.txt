@@ -1,0 +1,52 @@
+# 🤖 Bot Telegram IA Financeiro - Python
+# Dependências para Railway deployment
+
+# Bot Telegram
+python-telegram-bot==20.7
+python-telegram-bot[job-queue]==20.7
+
+# Banco de dados
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+
+# HTTP requests
+aiohttp==3.9.1
+requests==2.31.0
+
+# IA e Machine Learning
+openai==1.3.8
+google-generativeai==0.3.2
+
+# Utilities
+python-dotenv==1.0.0
+pydantic==2.5.2
+pydantic-settings==2.1.0
+
+# Data processing
+pandas==2.1.4
+numpy==1.26.2
+python-dateutil==2.8.2
+
+# Async
+asyncio-mqtt==0.16.1
+aiofiles==23.2.1
+
+# Decimal precision
+decimal==1.70
+
+# Logging
+structlog==23.2.0
+
+# Web server (para health check)
+fastapi==0.104.1
+uvicorn==0.24.0
+
+# Criptografia e Autenticação
+cryptography==41.0.8
+bcrypt==4.1.2
+
+# Timezone
+pytz==2023.3
+
+# JSON
+orjson==3.9.10
