@@ -568,7 +568,8 @@ Entre em contato com o suporte para reativar.
                 
                 # Usar Pluggy para buscar contas do usuário
                 async with PluggyClient(client_id, client_secret, sandbox=True) as pluggy:
-                    items = await pluggy.get_items()
+                    # Usar user_id como clientUserId
+                    items = await pluggy.get_items(str(user_id))
                     accounts = []
                     
                     for item in items:
@@ -623,6 +624,40 @@ Entre em contato com o suporte para reativar.
             
         except Exception as e:
             logger.error(f"Erro ao salvar conta no DB: {e}")
+
+    async def generate_connect_url(self, user_id):
+        """Gerar URL de conexão Pluggy com Connect Token"""
+        try:
+            client_id = os.getenv('PLUGGY_CLIENT_ID')
+            client_secret = os.getenv('PLUGGY_CLIENT_SECRET')
+            
+            if not client_id or not client_secret:
+                logger.error("Credenciais Pluggy não configuradas")
+                return None
+            
+            # Importar e usar cliente Pluggy
+            from pluggy_client import PluggyClient
+            
+            async with PluggyClient(client_id, client_secret, sandbox=True) as pluggy:
+                # Criar connect token genérico (sem connector específico)
+                connect_data = await pluggy.create_connect_token_generic(str(user_id))
+                
+                if connect_data and 'accessToken' in connect_data:
+                    # URL do Pluggy Connect com token
+                    base_url = "https://connect.sandbox.pluggy.ai" # Sandbox
+                    # base_url = "https://connect.pluggy.ai" # Produção
+                    
+                    connect_url = f"{base_url}?connectToken={connect_data['accessToken']}"
+                    
+                    logger.info(f"Connect URL gerada para usuário {user_id}")
+                    return connect_url
+                else:
+                    logger.error("Falha ao gerar connect token")
+                    return None
+                    
+        except Exception as e:
+            logger.error(f"Erro ao gerar connect URL: {e}")
+            return None
 
 async def main():
     """Função principal"""

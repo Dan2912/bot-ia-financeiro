@@ -152,48 +152,72 @@ def main():
                     user = await bot.get_or_create_user(update.effective_user)
                     
                     try:
-                        text = """🏦 **Conectar Conta Bancária**
+                        # Verificar credenciais Pluggy
+                        client_id = os.getenv('PLUGGY_CLIENT_ID')
+                        client_secret = os.getenv('PLUGGY_CLIENT_SECRET')
+                        
+                        if not client_id or not client_secret:
+                            await update.message.reply_text(
+                                "❌ **Serviço temporariamente indisponível**\n\n"
+                                "A integração bancária está sendo configurada.\n"
+                                "Tente novamente em alguns minutos.\n\n"
+                                "💡 Use /saldo para ver se já tem contas conectadas."
+                            )
+                            return
+                        
+                        # Gerar Connect Token
+                        connect_url = await bot.generate_connect_url(user['id'])
+                        
+                        if connect_url:
+                            text = f"""🏦 **Conectar Conta Bancária**
 
-🔗 **Integração via Pluggy (Open Finance)**
+🔗 **Link personalizado gerado com sucesso!**
 
 **Bancos disponíveis:**
-🏦 Banco Inter
-💜 Nubank  
-🔴 Bradesco
-🔶 Itaú
-🔴 Santander
-🟡 Banco do Brasil
-⚫ C6 Bank
-🟢 BTG Pactual
-📱 PicPay
-💰 XP Investimentos
-
-**E +190 outros bancos!**
+🏦 Banco Inter • 💜 Nubank • 🔴 Bradesco
+🔶 Itaú • 🔴 Santander • 🟡 Banco do Brasil
+⚫ C6 Bank • 🟢 BTG Pactual • 📱 PicPay
+💰 XP • 🟣 Will Bank • **+190 outros!**
 
 🔒 **Processo 100% seguro:**
-1️⃣ Clique no link do Pluggy
-2️⃣ Escolha seu banco
-3️⃣ Faça login (só você vê suas credenciais)
-4️⃣ Autorize o acesso aos dados
-5️⃣ Pronto! Dados sincronizados
+1️⃣ Clique no seu link personalizado abaixo
+2️⃣ Escolha seu banco na lista
+3️⃣ Faça login (suas credenciais ficam só no Pluggy)
+4️⃣ Autorize o acesso aos dados financeiros
+5️⃣ Pronto! Dados sincronizados automaticamente
 
-⚠️ **Importante:**
-• Suas credenciais ficam APENAS no Pluggy
+**🔗 SEU LINK PERSONALIZADO:**
+{connect_url}
+
+⚠️ **Segurança garantida:**
 • Certificado pelo Banco Central
-• Conformidade total com LGPD
-• Você pode revogar acesso a qualquer momento
+• Conformidade LGPD
+• Criptografia end-to-end
+• Revogação a qualquer momento
 
-🔗 **Link para conectar:**
-https://connect.pluggy.ai
+� **Após conectar, use /saldo para ver seus dados!**"""
+                        else:
+                            text = """🏦 **Conectar Conta Bancária**
 
-💡 Após conectar, use /saldo para ver seus saldos!"""
+❌ **Erro ao gerar link de conexão**
+
+Por favor, tente novamente em alguns instantes.
+Se o problema persistir, entre em contato com o suporte.
+
+**Bancos suportados:**
+🏦 Inter • 💜 Nubank • 🔴 Bradesco • 🔶 Itaú
+🔴 Santander • 🟡 BB • ⚫ C6 • 🟢 BTG • 📱 PicPay
+
+💡 Use /saldo para verificar contas já conectadas."""
                         
                         await update.message.reply_text(text, parse_mode='Markdown')
                         
                     except Exception as e:
                         logger.error(f"Erro no comando conectar: {e}")
                         await update.message.reply_text(
-                            "❌ Erro ao processar comando. Tente novamente em alguns instantes."
+                            "❌ **Erro no serviço de conexão bancária**\n\n"
+                            "Tente novamente em alguns instantes.\n\n"
+                            "💡 Use /saldo para ver contas já conectadas."
                         )
                 
                 # Comandos principais

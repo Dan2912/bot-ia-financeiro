@@ -82,6 +82,32 @@ class PluggyClient:
                 error_text = await response.text()
                 logger.error(f"Erro ao criar connect token: {response.status} - {error_text}")
                 return {}
+
+    async def create_connect_token_generic(self, user_id: str) -> Dict:
+        """Criar token genérico para conexão (usuário escolhe o banco no Pluggy Connect)"""
+        headers = {"X-API-KEY": self.api_key}
+        
+        connect_data = {
+            "itemId": None,  # Para nova conexão
+            "options": {
+                "clientUserId": str(user_id),
+                "webhookUrl": None  # Webhook opcional para notificações
+            }
+        }
+        
+        async with self.session.post(
+            f"{self.base_url}/connect_token",
+            headers=headers,
+            json=connect_data
+        ) as response:
+            if response.status == 200:
+                result = await response.json()
+                logger.info(f"Connect token criado para usuário {user_id}")
+                return result
+            else:
+                error_text = await response.text()
+                logger.error(f"Erro ao criar connect token genérico: {response.status} - {error_text}")
+                return {}
     
     async def get_items(self, client_user_id: str) -> List[Dict]:
         """Buscar itens (conexões) do usuário"""
