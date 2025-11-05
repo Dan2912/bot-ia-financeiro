@@ -329,11 +329,50 @@ Para dados reais, conecte seus bancos via `/conectar`"""
                             "Tente novamente em alguns instantes."
                         )
 
+                # Comando de teste rápido
+                async def teste_command(update, context):
+                    """Comando para testar funcionalidades básicas"""
+                    user = await bot.get_or_create_user(update.effective_user)
+                    
+                    try:
+                        # Verificar se há contas no banco
+                        contas = await bot.get_user_accounts(user['id'])
+                        
+                        text = f"""🧪 **Teste Rápido do Sistema**
+
+**👤 Usuário:** {user['full_name'] or user['username']}
+**🆔 ID:** {user['id']}
+**📊 Contas encontradas:** {len(contas)}
+
+**🔧 Comandos disponíveis:**
+• `/demo` - Carregar dados de exemplo
+• `/saldo` - Ver contas e saldos
+• `/conectar` - Conectar bancos
+• `/status` - Status dos serviços
+
+**💡 Se não vê dados:**
+1. Execute `/demo` primeiro
+2. Depois teste `/saldo`
+3. Use `/resumo` para dashboard
+
+✅ **Sistema funcionando normalmente!**"""
+                        
+                        await update.message.reply_text(text, parse_mode='Markdown')
+                        
+                    except Exception as e:
+                        logger.error(f"Erro no teste: {e}")
+                        await update.message.reply_text(
+                            "❌ **Erro no teste**\n\n"
+                            f"Detalhes: {str(e)}\n\n"
+                            "Tente novamente ou use `/demo` para carregar dados."
+                        )
+
                 # Comandos principais
                 application.add_handler(CommandHandler("saldo", saldo_command))
                 application.add_handler(CommandHandler("conectar", conectar_command))
                 application.add_handler(CommandHandler("status", status_command))
                 application.add_handler(CommandHandler("demo", demo_command))
+                application.add_handler(CommandHandler("teste", teste_command))
                 
                 # Tentar adicionar outros comandos se existirem
                 try:
@@ -359,7 +398,8 @@ Para dados reais, conecte seus bancos via `/conectar`"""
                         WAITING_EXPENSE_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, bot_commands.receive_expense_amount)],
                         WAITING_EXPENSE_CATEGORY: [CallbackQueryHandler(bot_commands.process_expense_category)],
                     },
-                    fallbacks=[CommandHandler('cancelar', bot_commands.cancel_operation)]
+                    fallbacks=[CommandHandler('cancelar', bot_commands.cancel_operation)],
+                    per_message=False
                 )
                 
                 goal_handler = ConversationHandler(
@@ -369,7 +409,8 @@ Para dados reais, conecte seus bancos via `/conectar`"""
                         WAITING_GOAL_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, bot_commands.receive_goal_amount)],
                         WAITING_GOAL_TYPE: [CallbackQueryHandler(bot_commands.process_goal_type)],
                     },
-                    fallbacks=[CommandHandler('cancelar', bot_commands.cancel_operation)]
+                    fallbacks=[CommandHandler('cancelar', bot_commands.cancel_operation)],
+                    per_message=False
                 )
                 
                 application.add_handler(expense_handler)
