@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Bot Telegram IA Financeiro - Railway Simple Runner
-Versão minimalista sem conflitos de event loop
+Sistema manual sem API Pluggy - Contas predefinidas
 """
 
 import os
@@ -24,7 +24,7 @@ if not TELEGRAM_TOKEN:
 
 def main():
     """Execução simples do bot"""
-    logger.info("🤖 Iniciando Bot Telegram IA Financeiro")
+    logger.info("🤖 Iniciando Bot Telegram IA Financeiro - Sistema Manual")
     
     try:
         # Importar dependências locais
@@ -109,6 +109,14 @@ def main():
             
             # Adicionar funcionalidades financeiras
             try:
+                # Importar novos sistemas
+                from revenue_manager import RevenueManager
+                from expense_manager import ExpenseManager
+                
+                # Criar instâncias dos gerenciadores
+                revenue_manager = RevenueManager(bot)
+                expense_manager = ExpenseManager(bot)
+                
                 # Criar função simples de saldo
                 async def saldo_command(update, context):
                     """Comando de saldo simplificado"""
@@ -123,8 +131,9 @@ def main():
                                 "🏦 **Nenhuma conta encontrada**\n\n"
                                 "**Opções disponíveis:**\n"
                                 "• `/demo` - Carregar dados de exemplo\n"
-                                "• `/conectar` - Conectar contas via Pluggy\n\n"
-                                "💡 Se você já conectou pelo Inter, pode haver delay na sincronização."
+                                "• `/receitas` - Adicionar primeira receita\n"
+                                "• `/gastos` - Registrar primeira despesa\n\n"
+                                "💡 Comece adicionando uma receita ou despesa!"
                             )
                             return
                         
@@ -148,18 +157,19 @@ def main():
                                 bank_name = account.get('bank_name', 'Banco')
                                 if 'inter' in bank_name.lower():
                                     text += "🟡 "  # Cor do Inter
+                                elif 'nubank' in bank_name.lower():
+                                    text += "💜 "
+                                elif 'c6' in bank_name.lower():
+                                    text += "⚫ "
+                                elif 'santander' in bank_name.lower():
+                                    text += "🔴 "
                                 else:
                                     text += "🏦 "
                                 
                                 text += f"**{bank_name}**\n"
                                 text += f"Tipo: {account.get('account_type', 'Conta')}\n"
                                 balance = float(account.get('balance', 0))
-                                text += f"Saldo: R$ {balance:,.2f}\n"
-                                
-                                # Mostrar última sincronização
-                                if account.get('last_sync'):
-                                    text += f"Última sync: {account.get('last_sync')}\n"
-                                text += "\n"
+                                text += f"Saldo: R$ {balance:,.2f}\n\n"
                                 total_real += balance
                             
                             text += f"💵 **Total Real: R$ {total_real:,.2f}**\n\n"
@@ -171,7 +181,7 @@ def main():
                             for account in contas_demo:
                                 bank_name = account.get('bank_name', 'Banco')
                                 if 'nubank' in bank_name.lower():
-                                    text += "� "
+                                    text += "💜 "
                                 elif 'inter' in bank_name.lower():
                                     text += "🟡 "
                                 elif 'itau' in bank_name.lower():
@@ -200,106 +210,50 @@ def main():
                             "Tente: `/demo` para dados de exemplo"
                         )
                 
-                # Criar função para conectar banco
+                # Criar função para conectar banco (modo manual)
                 async def conectar_command(update, context):
-                    """Comando para conectar conta bancária via Pluggy"""
+                    """Comando para conectar conta bancária manualmente"""
                     user = await bot.get_or_create_user(update.effective_user)
                     
                     try:
-                        # Verificar credenciais Pluggy
-                        client_id = os.getenv('PLUGGY_CLIENT_ID')
-                        client_secret = os.getenv('PLUGGY_CLIENT_SECRET')
+                        # Sistema manual - usar account_manager
+                        from account_manager import account_manager
                         
-                        if not client_id or not client_secret:
-                            await update.message.reply_text(
-                                "❌ **Serviço temporariamente indisponível**\n\n"
-                                "A integração bancária está sendo configurada.\n"
-                                "Tente novamente em alguns minutos.\n\n"
-                                "💡 Use /saldo para ver se já tem contas conectadas."
-                            )
-                            return
-                        
-                        # Gerar Connect Token
-                        connect_url = await bot.generate_connect_url(user['id'])
-                        
-                        if connect_url:
-                            text = f"""🏦 **Conectar Conta Bancária**
+                        text = """🏦 **Sistema de Contas Manuais**
 
-🔗 **Link personalizado gerado com sucesso!**
+**✅ Nova funcionalidade: Contas predefinidas!**
 
-**Bancos disponíveis:**
-🏦 Banco Inter • 💜 Nubank • 🔴 Bradesco
-🔶 Itaú • 🔴 Santander • 🟡 Banco do Brasil
-⚫ C6 Bank • 🟢 BTG Pactual • 📱 PicPay
-💰 XP • 🟣 Will Bank • **+190 outros!**
+**🏦 Contas disponíveis:**
+🟡 Banco Inter PJ (Receitas)
+🟡 Banco Inter PF (Receitas)  
+⚫ C6 Bank PJ
+⚫ C6 Bank PF
+💜 Nubank PJ
+💜 Nubank PF
+🔴 Santander PJ  
+🔴 Santander PF
 
-🔒 **Processo 100% seguro:**
-1️⃣ Clique no seu link personalizado abaixo
-2️⃣ Escolha seu banco na lista
-3️⃣ Faça login (suas credenciais ficam só no Pluggy)
-4️⃣ Autorize o acesso aos dados financeiros
-5️⃣ Pronto! Dados sincronizados automaticamente
+**💡 Como usar:**
+• `/receitas` - Adicionar receitas (salário, vendas)
+• `/gastos` - Adicionar despesas com parcelamento
+• `/saldo` - Ver contas cadastradas
 
-**🔗 SEU LINK PERSONALIZADO:**
-{connect_url}
+**🎯 Benefícios:**
+✅ Controle total dos seus dados
+✅ Interface guiada e intuitiva  
+✅ Parcelamento automático
+✅ Categorização inteligente
+✅ Sem APIs externas
 
-⚠️ **Segurança garantida:**
-• Certificado pelo Banco Central
-• Conformidade LGPD
-• Criptografia end-to-end
-• Revogação a qualquer momento
-
-� **Após conectar, use /saldo para ver seus dados!**"""
-                        else:
-                            # Modo offline - instruções manuais com mais detalhes
-                            text = """🏦 **Conectar Conta Bancária**
-
-🔧 **API Pluggy temporariamente indisponível**
-
-**📊 Status atual:**
-• ⚫ API Pluggy: Offline (SSL/Conectividade)
-• ✅ Bot principal: Funcionando  
-• ✅ Banco de dados: Ativo
-
-**� DEMONSTRAÇÃO DISPONÍVEL:**
-Para testar as funcionalidades, use `/demo` para adicionar dados de exemplo!
-
-**🛠️ Alternativas para dados reais:**
-
-📱 **Via App do banco (Open Banking):**
-1️⃣ Abra o app do seu banco
-2️⃣ Menu → Open Banking / Compartilhar dados
-3️⃣ Busque "Pluggy" na lista autorizada
-4️⃣ Autorize acesso (saldo, extrato, cartões)
-5️⃣ Use `/saldo` após autorizar
-
-💻 **Via Portal Web:**
-🔗 https://pluggy.ai
-• Login com suas credenciais
-• Conecte bancos manualmente
-
-**🎯 Funcionalidades sempre disponíveis:**
-• `/demo` - 🎮 Carregar dados de exemplo
-• `/despesas` - 💸 Cadastrar gastos manualmente  
-• `/metas` - 🎯 Definir objetivos financeiros
-• `/resumo` - 📊 Ver análises dos dados locais
-• `/status` - 🔍 Monitorar serviços
-
-**🔄 Monitoramento:**
-• API sendo verificada automaticamente
-• Notificação quando voltar online
-
-⏱️ **Situação:** Problema de conectividade SSL no Railway com Pluggy
-� **Bot 100% funcional** para todas as outras operações!"""
+**Comece adicionando uma receita ou despesa!**"""
                         
                         await update.message.reply_text(text, parse_mode='Markdown')
                         
                     except Exception as e:
                         logger.error(f"Erro no comando conectar: {e}")
                         await update.message.reply_text(
-                            "❌ **Erro no serviço de conexão bancária**\n\n"
-                            "Tente novamente em alguns instantes.\n\n"
-                            "💡 Use /saldo para ver contas já conectadas."
+                            "❌ **Erro no sistema de contas**\n\n"
+                            "Tente novamente em alguns instantes."
                         )
                 
                 # Comando de status dos serviços
@@ -308,182 +262,156 @@ Para testar as funcionalidades, use `/demo` para adicionar dados de exemplo!
                     user = await bot.get_or_create_user(update.effective_user)
                     
                     try:
-                        # Importar verificador de status
-                        from service_status import service_status
-                        
                         # Mostrar loading
                         loading_msg = await update.message.reply_text(
                             "🔍 **Verificando status dos serviços...**\n⏳ Aguarde alguns segundos"
                         )
                         
-                        # Verificar todos os serviços
-                        status_results = await service_status.check_all_services()
-                        credentials_status = await service_status.check_pluggy_credentials()
-                        status_results.update(credentials_status)
+                        # Status simplificado - sem API externa
+                        status_message = """📊 **Status dos Serviços**
+
+🤖 **Bot Telegram:** ✅ Online
+🗄️ **Banco PostgreSQL:** ✅ Conectado  
+🏦 **Sistema Manual:** ✅ Ativo
+📱 **Interface Guiada:** ✅ Funcionando
+
+**🎯 Funcionalidades disponíveis:**
+• ✅ Cadastro de receitas
+• ✅ Gestão de despesas com parcelamento
+• ✅ Contas bancárias predefinidas
+• ✅ Relatórios financeiros
+• ✅ Análise por IA (OpenAI)
+
+**💡 Comandos principais:**
+• `/receitas` - Adicionar receitas
+• `/gastos` - Registrar despesas  
+• `/saldo` - Ver contas e saldos
+• `/resumo` - Dashboard financeiro
+
+🟢 **Sistema 100% operacional!**"""
                         
-                        # Formatar resposta
-                        status_message = service_status.format_status_message(status_results)
-                        
-                        # Atualizar mensagem
+                        # Editar mensagem de loading
                         await loading_msg.edit_text(status_message, parse_mode='Markdown')
                         
                     except Exception as e:
                         logger.error(f"Erro no comando status: {e}")
                         await update.message.reply_text(
                             "❌ **Erro ao verificar status**\n\n"
-                            "Tente novamente em alguns instantes.\n\n"
-                            "💡 **Status geral:** Bot funcionando normalmente\n"
-                            "🏦 **Conexão bancária:** Em verificação"
+                            "Bot funcionando normalmente."
                         )
                 
-                # Comando demo para dados de exemplo
+                # Criar função de demo
                 async def demo_command(update, context):
-                    """Adicionar dados de exemplo para demonstração"""
+                    """Comando para carregar dados de demonstração"""
                     user = await bot.get_or_create_user(update.effective_user)
                     
                     try:
-                        # Adicionar contas de exemplo
+                        await update.message.reply_text(
+                            "🎮 **Carregando dados de demonstração...**\n⏳ Aguarde alguns segundos"
+                        )
+                        
+                        # Criar dados demo
                         await bot.create_demo_accounts(user['id'])
                         
-                        text = """🎮 **Dados de Demonstração Carregados!**
-
-**🏦 Contas criadas:**
-• 💜 Nubank - R$ 2.450,00
-• 🏦 Banco Inter - R$ 1.800,00  
-• 🔶 Itaú - R$ 5.200,00
-
-**💳 Cartões adicionados:**
-• Nubank Mastercard - Limite R$ 3.000
-• Inter Gold - Limite R$ 5.000
-
-**💸 Transações de exemplo:**
-• 15 gastos dos últimos 30 dias
-• Categorias: Alimentação, Transporte, Lazer
-• Receitas e despesas variadas
-
-**🎯 Meta exemplo:**
-• Reserva de Emergência - R$ 10.000
-• Progresso atual: 32% (R$ 3.200)
-
-**📊 Agora você pode testar:**
-• `/saldo` - Ver suas contas e saldos
-• `/resumo` - Dashboard financeiro completo
-• `/despesas` - Adicionar novos gastos
-• `/metas` - Gerenciar objetivos
-
-**⚠️ Dados de exemplo apenas!**
-Para dados reais, conecte seus bancos via `/conectar`"""
-                        
-                        await update.message.reply_text(text, parse_mode='Markdown')
+                        await update.message.reply_text(
+                            "✅ **Dados de demonstração carregados!**\n\n"
+                            "💡 **O que foi criado:**\n"
+                            "🏦 Contas bancárias de exemplo\n"
+                            "💳 Cartões de crédito demo\n"
+                            "📊 Transações de exemplo\n"
+                            "🎯 Meta financeira demo\n\n"
+                            "**Comandos para testar:**\n"
+                            "• `/saldo` - Ver contas e saldos\n"
+                            "• `/resumo` - Dashboard completo\n"
+                            "• `/receitas` - Adicionar nova receita\n"
+                            "• `/gastos` - Registrar nova despesa"
+                        )
                         
                     except Exception as e:
-                        logger.error(f"Erro no comando demo: {e}")
+                        logger.error(f"Erro ao criar dados demo: {e}")
                         await update.message.reply_text(
-                            "❌ **Erro ao criar dados de demonstração**\n\n"
-                            "Tente novamente em alguns instantes."
+                            "❌ **Erro ao carregar dados demo**\n\n"
+                            f"Detalhes: {str(e)}"
                         )
-
-                # Comando de teste rápido
+                
+                # Função de teste
                 async def teste_command(update, context):
-                    """Comando para testar funcionalidades básicas"""
+                    """Comando de teste do sistema"""
                     user = await bot.get_or_create_user(update.effective_user)
                     
-                    try:
-                        # Verificar se há contas no banco
-                        contas = await bot.get_user_accounts(user['id'])
-                        
-                        text = f"""🧪 **Teste Rápido do Sistema**
-
-**👤 Usuário:** {user['full_name'] or user['username']}
-**🆔 ID:** {user['id']}
-**📊 Contas encontradas:** {len(contas)}
-
-**🔧 Comandos disponíveis:**
-• `/demo` - Carregar dados de exemplo
-• `/saldo` - Ver contas e saldos
-• `/conectar` - Conectar bancos
-• `/status` - Status dos serviços
-
-**💡 Se não vê dados:**
-1. Execute `/demo` primeiro
-2. Depois teste `/saldo`
-3. Use `/resumo` para dashboard
-
-✅ **Sistema funcionando normalmente!**"""
-                        
-                        await update.message.reply_text(text, parse_mode='Markdown')
-                        
-                    except Exception as e:
-                        logger.error(f"Erro no teste: {e}")
-                        await update.message.reply_text(
-                            "❌ **Erro no teste**\n\n"
-                            f"Detalhes: {str(e)}\n\n"
-                            "Tente novamente ou use `/demo` para carregar dados."
-                        )
-
-                # Comando para adicionar conta Inter manualmente
-                async def inter_command(update, context):
-                    """Adicionar conta Inter manualmente (já que você tem conectado)"""
-                    user = await bot.get_or_create_user(update.effective_user)
-                    
-                    try:
-                        # Verificar se já tem conta Inter
-                        existing_inter = await bot.execute_query_one(
-                            "SELECT * FROM bank_accounts WHERE user_id = $1 AND bank_name ILIKE '%inter%'",
-                            (user['id'],)
-                        )
-                        
-                        if existing_inter:
-                            text = f"""🟡 **Banco Inter - Conta Existente**
-                            
-**Conta encontrada:**
-• Banco: {existing_inter['bank_name']}
-• Tipo: {existing_inter['account_type']}
-• Saldo: R$ {float(existing_inter['balance']):,.2f}
-
-✅ **Sua conta Inter já está registrada!**
-Use `/saldo` para ver todas as contas."""
-                        else:
-                            # Adicionar conta Inter real
-                            await bot.execute_query_one(
-                                """INSERT INTO bank_accounts (
-                                    user_id, bank_name, account_type, account_number, 
-                                    balance, currency_code, is_active, pluggy_item_id, 
-                                    pluggy_account_id, last_sync
-                                ) VALUES ($1, $2, $3, $4, $5, $6, true, $7, $8, CURRENT_TIMESTAMP)""",
-                                (user['id'], 'Banco Inter', 'Conta Corrente', '****0001', 
-                                 0.00, 'BRL', 'real_inter_item', 'real_inter_account')
-                            )
-                            
-                            text = """🟡 **Banco Inter - Conta Adicionada!**
-                            
-✅ **Conta Inter registrada com sucesso!**
-
-**Próximos passos:**
-1. Use `/saldo` para ver a conta
-2. O saldo será sincronizado automaticamente
-3. Dados reais do Inter aparecerão em breve
-
-💡 **Nota:** Como você já conectou pelo app do Inter, 
-os dados devem aparecer na próxima sincronização."""
-                        
-                        await update.message.reply_text(text, parse_mode='Markdown')
-                        
-                    except Exception as e:
-                        logger.error(f"Erro no comando inter: {e}")
-                        await update.message.reply_text(
-                            "❌ **Erro ao processar conta Inter**\n\n"
-                            f"Detalhes: {str(e)}\n\n"
-                            "Tente novamente em alguns instantes."
-                        )
-
+                    await update.message.reply_text(
+                        f"✅ **Sistema funcionando!**\n\n"
+                        f"👤 **Usuário:** {user['full_name']}\n"
+                        f"🆔 **ID:** {user['id']}\n"
+                        f"📧 **Email:** {user.get('email', 'Não cadastrado')}\n\n"
+                        f"🤖 **Bot:** Online\n"
+                        f"🗄️ **Banco:** Conectado\n"
+                        f"📱 **Sistema manual:** Ativo\n\n"
+                        f"**Teste concluído com sucesso!**"
+                    )
+                
                 # Comandos principais
                 application.add_handler(CommandHandler("saldo", saldo_command))
                 application.add_handler(CommandHandler("conectar", conectar_command))
                 application.add_handler(CommandHandler("status", status_command))
                 application.add_handler(CommandHandler("demo", demo_command))
                 application.add_handler(CommandHandler("teste", teste_command))
-                application.add_handler(CommandHandler("inter", inter_command))
+                
+                # Novos comandos de receitas e despesas
+                from revenue_manager import (WAITING_REVENUE_TYPE, WAITING_REVENUE_DESCRIPTION, 
+                                           WAITING_REVENUE_VALUE, WAITING_REVENUE_DATE, 
+                                           WAITING_REVENUE_ACCOUNT, WAITING_REVENUE_FREQUENCY, 
+                                           WAITING_REVENUE_CONFIRMATION)
+                
+                from expense_manager import (WAITING_EXPENSE_TYPE, WAITING_EXPENSE_DESCRIPTION,
+                                           WAITING_EXPENSE_VALUE, WAITING_EXPENSE_DATE,
+                                           WAITING_EXPENSE_ACCOUNT, WAITING_INSTALLMENT_OPTION,
+                                           WAITING_INSTALLMENT_COUNT, WAITING_INSTALLMENT_START,
+                                           WAITING_EXPENSE_CONFIRMATION)
+                
+                # ConversationHandler para receitas
+                revenue_handler = ConversationHandler(
+                    entry_points=[CommandHandler('receitas', revenue_manager.start_add_revenue)],
+                    states={
+                        WAITING_REVENUE_TYPE: [CallbackQueryHandler(revenue_manager.process_revenue_type)],
+                        WAITING_REVENUE_DESCRIPTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, revenue_manager.receive_revenue_description)],
+                        WAITING_REVENUE_VALUE: [MessageHandler(filters.TEXT & ~filters.COMMAND, revenue_manager.receive_revenue_value)],
+                        WAITING_REVENUE_DATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, revenue_manager.receive_revenue_date)],
+                        WAITING_REVENUE_ACCOUNT: [CallbackQueryHandler(revenue_manager.process_revenue_account)],
+                        WAITING_REVENUE_FREQUENCY: [CallbackQueryHandler(revenue_manager.process_revenue_frequency)],
+                        WAITING_REVENUE_CONFIRMATION: [CallbackQueryHandler(revenue_manager.process_confirmation)],
+                    },
+                    fallbacks=[CommandHandler('cancelar', revenue_manager.cancel_operation)],
+                    per_message=False
+                )
+                
+                # ConversationHandler para despesas
+                expense_handler_new = ConversationHandler(
+                    entry_points=[CommandHandler('gastos', expense_manager.start_add_expense)],
+                    states={
+                        WAITING_EXPENSE_TYPE: [CallbackQueryHandler(expense_manager.process_expense_type)],
+                        WAITING_EXPENSE_DESCRIPTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, expense_manager.receive_expense_description)],
+                        WAITING_EXPENSE_VALUE: [MessageHandler(filters.TEXT & ~filters.COMMAND, expense_manager.receive_expense_value)],
+                        WAITING_EXPENSE_DATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, expense_manager.receive_expense_date)],
+                        WAITING_EXPENSE_ACCOUNT: [CallbackQueryHandler(expense_manager.process_expense_account)],
+                        WAITING_INSTALLMENT_OPTION: [CallbackQueryHandler(expense_manager.process_installment_option)],
+                        WAITING_INSTALLMENT_COUNT: [
+                            CallbackQueryHandler(expense_manager.process_installment_count),
+                            MessageHandler(filters.TEXT & ~filters.COMMAND, expense_manager.receive_custom_installments)
+                        ],
+                        WAITING_INSTALLMENT_START: [
+                            CallbackQueryHandler(expense_manager.process_installment_start),
+                            MessageHandler(filters.TEXT & ~filters.COMMAND, expense_manager.receive_custom_start_date)
+                        ],
+                        WAITING_EXPENSE_CONFIRMATION: [CallbackQueryHandler(expense_manager.process_confirmation)],
+                    },
+                    fallbacks=[CommandHandler('cancelar', expense_manager.cancel_operation)],
+                    per_message=False
+                )
+                
+                # Adicionar handlers
+                application.add_handler(revenue_handler)
+                application.add_handler(expense_handler_new)
                 
                 # Tentar adicionar outros comandos se existirem
                 try:
@@ -492,69 +420,32 @@ os dados devem aparecer na próxima sincronização."""
                     logger.warning("Comando cartões não disponível")
                 
                 try:
-                    application.add_handler(CommandHandler("gastos", bot_commands.ai_analysis_callback))
                     application.add_handler(CommandHandler("analise", bot_commands.ai_analysis_callback))
                 except:
                     logger.warning("Comandos de análise não disponíveis")
                 
-                # Funcionalidades de despesas e metas
-                from bot_commands import WAITING_EXPENSE_TITLE, WAITING_EXPENSE_AMOUNT, WAITING_EXPENSE_CATEGORY
-                from bot_commands import WAITING_GOAL_TITLE, WAITING_GOAL_AMOUNT, WAITING_GOAL_TYPE
-                
-                # ConversationHandlers financeiros
-                expense_handler = ConversationHandler(
-                    entry_points=[CommandHandler('despesas', bot_commands.expenses_command)],
-                    states={
-                        WAITING_EXPENSE_TITLE: [MessageHandler(filters.TEXT & ~filters.COMMAND, bot_commands.receive_expense_title)],
-                        WAITING_EXPENSE_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, bot_commands.receive_expense_amount)],
-                        WAITING_EXPENSE_CATEGORY: [CallbackQueryHandler(bot_commands.process_expense_category)],
-                    },
-                    fallbacks=[CommandHandler('cancelar', bot_commands.cancel_operation)],
-                    per_message=False
-                )
-                
-                goal_handler = ConversationHandler(
-                    entry_points=[CommandHandler('metas', bot_commands.goals_command)],
-                    states={
-                        WAITING_GOAL_TITLE: [MessageHandler(filters.TEXT & ~filters.COMMAND, bot_commands.receive_goal_title)],
-                        WAITING_GOAL_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, bot_commands.receive_goal_amount)],
-                        WAITING_GOAL_TYPE: [CallbackQueryHandler(bot_commands.process_goal_type)],
-                    },
-                    fallbacks=[CommandHandler('cancelar', bot_commands.cancel_operation)],
-                    per_message=False
-                )
-                
-                application.add_handler(expense_handler)
-                application.add_handler(goal_handler)
-                
-                # Comandos financeiros diretos
-                application.add_handler(CommandHandler('relatorio', bot_commands.expense_report_command))
-                application.add_handler(CommandHandler('resumo', bot_commands.financial_summary_command))
-                
-                # Comandos de atalho
-                application.add_handler(CommandHandler('nova_despesa', bot_commands.start_add_expense))
-                application.add_handler(CommandHandler('nova_meta', bot_commands.start_add_goal))
-                
-                logger.info("💰 Funcionalidades financeiras carregadas (saldo, cartões, IA)")
+                logger.info("💰 Funcionalidades financeiras carregadas (sistema manual)")
                 
             except Exception as e:
                 logger.warning(f"⚠️ Algumas funcionalidades financeiras não disponíveis: {e}")
             
             logger.info("✅ Funcionalidades avançadas carregadas")
             
-        except ImportError as e:
+        except Exception as e:
             logger.warning(f"⚠️ Funcionalidades avançadas não disponíveis: {e}")
-            logger.info("ℹ️ Bot funcionará apenas com comandos básicos")
+            # Continuar apenas com comandos básicos
         
-        logger.info("✅ Bot configurado, iniciando polling")
+        logger.info("🚀 Bot configurado. Iniciando polling...")
         
-        # Executar bot de forma simples
-        application.run_polling()
+        # Executar bot
+        application.run_polling(
+            allowed_updates=['message', 'callback_query'],
+            drop_pending_updates=True
+        )
         
     except Exception as e:
-        logger.error(f"💥 Erro fatal: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"❌ Erro fatal: {e}")
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()

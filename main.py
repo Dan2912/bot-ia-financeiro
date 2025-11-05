@@ -8,7 +8,6 @@ import asyncpg
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 import openai
-from pluggy_client import PluggyClient
 from health_server import start_health_server
 
 # Configurar logging
@@ -21,19 +20,11 @@ logger = logging.getLogger(__name__)
 # Configurações (todas vêm das variáveis de ambiente do Railway)
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 DATABASE_URL = os.getenv('DATABASE_URL')
-PLUGGY_CLIENT_ID = os.getenv('PLUGGY_CLIENT_ID')
-PLUGGY_CLIENT_SECRET = os.getenv('PLUGGY_CLIENT_SECRET')
-PLUGGY_SANDBOX = os.getenv('PLUGGY_SANDBOX', 'true').lower() == 'true'
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 class FinancialBot:
     def __init__(self):
-        self.pluggy = PluggyClient(
-            client_id=PLUGGY_CLIENT_ID,
-            client_secret=PLUGGY_CLIENT_SECRET,
-            sandbox=PLUGGY_SANDBOX
-        )
-        self.openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        self.openai_client = openai.OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
         self.db_pool = None
     
     async def init_database(self):
@@ -634,44 +625,7 @@ Entre em contato com o suporte para reativar.
         except Exception as e:
             logger.error(f"Erro ao salvar conta no DB: {e}")
 
-    async def generate_connect_url(self, user_id):
-        """Gerar URL de conexão Pluggy com Connect Token"""
-        try:
-            client_id = os.getenv('PLUGGY_CLIENT_ID')
-            client_secret = os.getenv('PLUGGY_CLIENT_SECRET')
-            
-            if not client_id or not client_secret:
-                logger.warning("Credenciais Pluggy não configuradas - modo offline")
-                return None
-            
-            # Importar e usar cliente Pluggy
-            from pluggy_client import PluggyClient
-            
-            try:
-                async with PluggyClient(client_id, client_secret, sandbox=True) as pluggy:
-                    # Criar connect token genérico (sem connector específico)
-                    connect_data = await pluggy.create_connect_token_generic(str(user_id))
-                    
-                    if connect_data and 'accessToken' in connect_data:
-                        # URL do Pluggy Connect com token
-                        base_url = "https://connect.sandbox.pluggy.ai" # Sandbox
-                        # base_url = "https://connect.pluggy.ai" # Produção
-                        
-                        connect_url = f"{base_url}?connectToken={connect_data['accessToken']}"
-                        
-                        logger.info(f"Connect URL gerada para usuário {user_id}")
-                        return connect_url
-                    else:
-                        logger.warning("Falha ao gerar connect token - resposta inválida")
-                        return None
-                        
-            except Exception as pluggy_error:
-                logger.warning(f"Pluggy API indisponível: {pluggy_error}")
-                return None
-                    
-        except Exception as e:
-            logger.warning(f"Erro geral ao gerar connect URL: {e}")
-            return None
+
 
     async def create_demo_accounts(self, user_id):
         """Criar contas e dados de demonstração para o usuário"""
@@ -800,6 +754,53 @@ Entre em contato com o suporte para reativar.
             
         except Exception as e:
             logger.warning(f"Erro ao criar meta demo: {e}")
+
+    async def get_or_create_category(self, user_id: int, name: str, type_: str) -> dict:
+        """Buscar ou criar categoria"""
+        try:
+            # Primeiro tentar buscar categoria existente
+            existing = await self.execute_query_one(
+                "SELECT id, name, type, icon FROM categories WHERE user_id = $1 AND name = $2",
+                (user_id, name)
+            )
+            
+            if existing:
+                return existing
+            
+            # Criar nova categoria
+            icon_map = {
+                '💰 Salário': '💰',
+                '💻 Freelance': '💻',
+                '🏢 Faturamento Empresa': '🏢',
+                '📈 Rendimentos': '📈',
+                '🏠 Aluguel Recebido': '🏠',
+                '💡 Outras Receitas': '💡',
+                '🍽️ Alimentação': '🍽️',
+                '🚗 Transporte': '🚗',
+                '🛒 Compras Pessoais': '🛒',
+                '🏥 Saúde': '🏥',
+                '📚 Educação': '📚',
+                '🏠 Contas Fixas': '🏠',
+                '🏢 Empresarial': '🏢',
+                '📈 Investimentos': '📈',
+                '🎮 Lazer': '🎮',
+                '💡 Outras Despesas': '💡'
+            }
+            
+            icon = icon_map.get(name, '📊')
+            
+            query = """
+                INSERT INTO categories (user_id, name, type, icon, is_active)
+                VALUES ($1, $2, $3, $4, true)
+                RETURNING id, name, type, icon
+            """
+            
+            result = await self.execute_query_one(query, (user_id, name, type_, icon))
+            return result
+            
+        except Exception as e:
+            logger.error(f"Erro ao buscar/criar categoria: {e}")
+            return None
 
     async def create_demo_transactions(self, user_id):
         """Criar transações de exemplo"""
