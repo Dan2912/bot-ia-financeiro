@@ -261,28 +261,6 @@ Bot: 🎉 Meta criada com sucesso!
 
 ## 📞 **Suporte e Contribuição**
 
-### **🐛 Reportar Bugs**
-- Abra uma [Issue](https://github.com/Danillo2912/bot-ia-financeiro/issues)
-- Descreva o problema detalhadamente
-- Inclua prints se possível
-
-### **💡 Sugestões**
-- Use [Discussions](https://github.com/Danillo2912/bot-ia-financeiro/discussions)
-- Compartilhe ideias de melhorias
-- Vote nas sugestões da comunidade
-
-### **🤝 Contribuir**
-1. Fork o projeto
-2. Crie uma branch para sua feature
-3. Commit suas mudanças
-4. Abra um Pull Request
-
-## 📄 **Licença**
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
----
-
 **Desenvolvido com ❤️ para revolucionar sua gestão financeira!**
 
 *"O controle financeiro é o primeiro passo para a liberdade financeira."*
