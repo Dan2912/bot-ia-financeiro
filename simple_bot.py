@@ -428,6 +428,24 @@ def main():
                 application.add_handler(CommandHandler("reset_senha", bot_commands.reset_password_command))
                 application.add_handler(CommandHandler("debug_user", bot_commands.debug_user_command))
                 
+                # Adicionar comandos de debug para verificar funcionamento
+                async def debug_receitas_command(update, context):
+                    """Debug do comando receitas"""
+                    await update.message.reply_text("🔧 DEBUG: Comando /receitas funcionando!")
+                
+                async def debug_gastos_command(update, context):
+                    """Debug do comando gastos"""
+                    await update.message.reply_text("🔧 DEBUG: Comando /gastos funcionando!")
+                
+                async def debug_perfil_command(update, context):
+                    """Debug do comando perfil"""
+                    await update.message.reply_text("🔧 DEBUG: Comando /perfil funcionando!")
+                
+                # Registrar comandos de debug
+                application.add_handler(CommandHandler("debug_receitas", debug_receitas_command))
+                application.add_handler(CommandHandler("debug_gastos", debug_gastos_command))
+                application.add_handler(CommandHandler("debug_perfil", debug_perfil_command))
+                
                 logger.info("💰 Funcionalidades financeiras carregadas (sistema manual)")
                 
             except Exception as e:
@@ -439,7 +457,45 @@ def main():
             logger.warning(f"⚠️ Funcionalidades avançadas não disponíveis: {e}")
             # Continuar apenas com comandos básicos
         
-        logger.info("🚀 Bot configurado. Iniciando polling...")
+        # Adicionar handler de fallback para mensagens não reconhecidas
+        async def fallback_handler(update, context):
+            """Handler para mensagens não reconhecidas"""
+            message_text = update.message.text if update.message and update.message.text else "sem texto"
+            
+            # Se começa com /, é um comando não reconhecido
+            if message_text.startswith('/'):
+                await update.message.reply_text(
+                    f"❌ **Comando não reconhecido:** `{message_text}`\n\n"
+                    "**Comandos disponíveis:**\n"
+                    "• `/start` - Menu principal\n"
+                    "• `/receitas` - Sistema de receitas\n"
+                    "• `/gastos` - Sistema de despesas\n"
+                    "• `/saldo` - Ver contas e saldos\n"
+                    "• `/perfil` - Seu perfil\n"
+                    "• `/demo` - Dados de exemplo\n\n"
+                    "**Debug:**\n"
+                    "• `/debug_receitas` - Testar receitas\n"
+                    "• `/debug_gastos` - Testar gastos\n"
+                    "• `/debug_perfil` - Testar perfil\n\n"
+                    "💡 Use `/start` para voltar ao menu principal.",
+                    parse_mode='Markdown'
+                )
+            else:
+                # Mensagem normal fora de conversa
+                await update.message.reply_text(
+                    "🤖 **Bot ativo!**\n\n"
+                    "Para usar o sistema financeiro, digite um comando:\n"
+                    "• `/start` - Começar\n"
+                    "• `/receitas` - Adicionar receitas\n" 
+                    "• `/gastos` - Registrar despesas\n\n"
+                    "💡 **Dica:** Use `/start` para ver o menu completo!"
+                )
+        
+        # Adicionar handler de fallback com prioridade baixa
+        from telegram.ext import MessageHandler, filters
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, fallback_handler), group=99)
+        
+        logger.info("🚀 Bot configurado com handlers de fallback. Iniciando polling...")
         
         # Executar bot
         application.run_polling(
