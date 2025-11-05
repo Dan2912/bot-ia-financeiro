@@ -15,7 +15,9 @@ async def root():
 
 def start_health_server():
     """Iniciar servidor de health check em thread separada"""
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="warning")
+    import os
+    PORT = int(os.getenv('PORT', 8080))
+    uvicorn.run(app, host="0.0.0.0", port=PORT, log_level="warning")
 
 if __name__ == "__main__":
     # Iniciar em thread para não bloquear o bot

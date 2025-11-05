@@ -902,7 +902,8 @@ async def main():
     # Iniciar servidor de health check em thread separada
     health_thread = threading.Thread(target=start_health_server, daemon=True)
     health_thread.start()
-    logger.info("🌐 Servidor de health check iniciado na porta 8000")
+    PORT = int(os.getenv('PORT', 8080))
+    logger.info(f"🌐 Servidor de health check iniciado na porta {PORT}")
     
     bot = FinancialBot()
     
