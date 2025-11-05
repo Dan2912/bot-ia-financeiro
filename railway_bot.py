@@ -90,8 +90,7 @@ async def run_bot():
                 WAITING_EXPENSE_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, bot_commands.receive_expense_amount)],
                 WAITING_EXPENSE_CATEGORY: [CallbackQueryHandler(bot_commands.process_expense_category)],
             },
-            fallbacks=[CommandHandler('cancelar', bot_commands.cancel_operation)],
-            per_message=True
+            fallbacks=[CommandHandler('cancelar', bot_commands.cancel_operation)]
         )
         
         goal_handler = ConversationHandler(
@@ -101,8 +100,7 @@ async def run_bot():
                 WAITING_GOAL_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, bot_commands.receive_goal_amount)],
                 WAITING_GOAL_TYPE: [CallbackQueryHandler(bot_commands.process_goal_type)],
             },
-            fallbacks=[CommandHandler('cancelar', bot_commands.cancel_operation)],
-            per_message=True
+            fallbacks=[CommandHandler('cancelar', bot_commands.cancel_operation)]
         )
         
         application.add_handler(expense_handler)
@@ -126,5 +124,37 @@ async def run_bot():
     logger.info("🤖 Bot Telegram IA Financeiro iniciado no Railway!")
     await application.run_polling(allowed_updates=Update.ALL_TYPES)
 
+def main():
+    """Ponto de entrada que gerencia event loops de forma segura"""
+    try:
+        # Verificar se já existe um loop em execução
+        loop = asyncio.get_running_loop()
+        # Se chegou aqui, existe um loop rodando
+        logger.info("📍 Event loop existente detectado - criando tarefa")
+        # Criar uma task no loop existente
+        loop.create_task(run_bot())
+        # Manter o script vivo
+        import time
+        while True:
+            time.sleep(1)
+    except RuntimeError:
+        # Não há loop rodando, podemos criar um novo
+        logger.info("🆕 Criando novo event loop")
+        try:
+            asyncio.run(run_bot())
+        except RuntimeError as e:
+            if "This event loop is already running" in str(e):
+                # Última tentativa - usar get_event_loop
+                logger.info("🔄 Tentativa com get_event_loop")
+                loop = asyncio.get_event_loop()
+                if not loop.is_running():
+                    loop.run_until_complete(run_bot())
+                else:
+                    # Loop já está rodando, só executar a função
+                    loop.create_task(run_bot())
+                    loop.run_forever()
+            else:
+                raise e
+
 if __name__ == '__main__':
-    asyncio.run(run_bot())
+    main()
