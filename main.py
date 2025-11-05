@@ -282,18 +282,20 @@ class FinancialBot:
 🎯 Metas financeiras personalizadas
 💡 Conselhos de investimento com IA
 
-*Comandos disponíveis:*
-/despesas - Gerenciar gastos
-/metas - Suas metas financeiras
-/resumo - Dashboard completo
-/perfil - Seu perfil"""
+*Sistema manual ativo! Funcionalidades:*
+💰 Receitas com contas predefinidas
+💸 Despesas com parcelamento automático
+🏦 8 contas bancárias configuradas
+📊 Análises inteligentes com IA
+
+*Use os botões abaixo ou comandos diretos:*"""
                     
                     keyboard = [
-                        [InlineKeyboardButton("🏦 Conectar Banco", callback_data="connect_bank")],
-                        [InlineKeyboardButton("💸 Despesas", callback_data="manage_expenses")],
-                        [InlineKeyboardButton("🎯 Metas", callback_data="manage_goals")],
-                        [InlineKeyboardButton("📊 Resumo", callback_data="financial_summary")],
-                        [InlineKeyboardButton("👤 Perfil", callback_data="user_profile")]
+                        [InlineKeyboardButton("💰 Receitas", callback_data="add_revenue"),
+                         InlineKeyboardButton("💸 Despesas", callback_data="add_expense")],
+                        [InlineKeyboardButton("💰 Saldo", callback_data="check_balance"),
+                         InlineKeyboardButton("� Perfil", callback_data="view_profile")],
+                        [InlineKeyboardButton("� Dashboard", callback_data="financial_summary")]
                     ]
                 else:
                     welcome_text = f"""🤖 *Olá {telegram_user.first_name}!* 
@@ -358,127 +360,178 @@ Entre em contato com o suporte para reativar.
         
         if data == "start_login":
             await query.edit_message_text(
-                """🔐 **Opções de Login**
+                """🔐 **Sistema de Login**
 
-**Problemas com login? Temos soluções:**
+**Comandos disponíveis:**
 
-🔧 **Comandos disponíveis:**
+• `/entrar` - � **Login automático** (recomendado)
 • `/login` - Login tradicional com senha
-• `/entrar` - Login automático (recomendado)
-• `/reset_senha` - Resetar senha para 123456
-• `/debug_user` - Ver informações da conta
+• `/cadastro` - Criar nova conta
 
-**💡 Recomendação:** Use `/entrar` para login automático baseado no seu Telegram!"""
+**⚠️ Problemas de acesso?**
+• `/reset_senha` - Resetar senha para 123456  
+• `/debug_user` - Ver dados da sua conta
+
+**💡 Dica:** Use `/entrar` - é mais rápido e seguro!""",
+                parse_mode='Markdown'
             )
         elif data == "start_registration":
             await query.edit_message_text(
                 """📝 **Criar Nova Conta**
 
-**✅ Processo simples e seguro:**
+**Processo rápido:**
+1️⃣ Digite `/cadastro`
+2️⃣ Informe nome, email e senha
+3️⃣ Pronto para usar!
 
-1️⃣ Use o comando `/cadastro`
-2️⃣ Digite seu nome completo
-3️⃣ Informe seu email
-4️⃣ Crie uma senha segura
-5️⃣ Pronto! Conta criada
+**🚀 Quer começar agora?**
+• `/demo` - Dados de exemplo
+• `/receitas` - Adicionar receitas  
+• `/gastos` - Registrar despesas
 
-**🎯 Alternativa rápida:**
-Se quiser pular o cadastro, você pode usar diretamente:
-• `/demo` - Para dados de exemplo
-• `/receitas` - Para adicionar receitas
-• `/gastos` - Para registrar despesas
-
-**Digite `/cadastro` para começar!**"""
-            )
-        elif data == "about_system":
-            await query.edit_message_text(
-                """ℹ️ **Sobre o Bot IA Financeiro**
-
-🤖 **Sistema Inteligente:**
-• IA avançada com OpenAI GPT-4
-• Análise comportamental de gastos
-• Recomendações personalizadas
-
-🏦 **Integração Bancária:**
-• +200 bancos brasileiros via Pluggy
-• Open Finance certificado
-• Dados sincronizados em tempo real
-
-🔒 **Segurança Total:**
-• Criptografia end-to-end
-• Credenciais nunca no código
-• Conformidade com LGPD
-• Auditoria de segurança
-
-💡 **Funcionalidades:**
-• Controle de gastos inteligente
-• Metas financeiras automatizadas
-• Conselhos de investimento personalizados
-• Alertas de gastos excessivos""",
+**Digite `/cadastro` para criar sua conta!**""",
                 parse_mode='Markdown'
             )
-        elif data == "connect_bank":
+        elif data == "add_revenue":
             await query.edit_message_text(
-                "🏦 **Conectar Conta Bancária**\n\n"
-                "📱 **Integração Pluggy - Open Finance**\n\n"
-                "✅ **Suporte a +200 bancos brasileiros:**\n"
-                "• Banco Inter\n"
-                "• Nubank\n"
-                "• Bradesco\n"
-                "• Itaú\n"
-                "• Santander\n"
-                "• Banco do Brasil\n"
-                "• C6 Bank\n"
-                "• BTG Pactual\n"
-                "• E muitos outros...\n\n"
-                "🔒 **Conexão 100% segura e criptografada**\n"
-                "🏦 **Certificado pelo Banco Central**\n"
-                "📊 **Dados sincronizados em tempo real**\n\n"
-                "**Comandos disponíveis:**\n"
-                "• `/conectar` - Conectar nova conta\n"
-                "• `/status` - Verificar serviços\n"
-                "• `/saldo` - Ver contas conectadas\n\n"
-                "💡 **Processo seguro:** Suas credenciais ficam apenas no Pluggy!"
+                """💰 **Sistema de Receitas**
+
+Para adicionar uma receita, use:
+**`/receitas`** 
+
+**Tipos disponíveis:**
+• 💼 Salário
+• 🤝 Fornecedor  
+• 💻 Freelance
+• 📈 Investimentos
+• 💰 Outros
+
+**Contas de receita:**
+• 🟢 Inter PF (pessoal)
+• 🔵 Inter PJ (empresarial)
+
+Digite `/receitas` para começar!""",
+                parse_mode='Markdown'
             )
-        elif data == "manage_expenses":
+        elif data == "add_expense":
             await query.edit_message_text(
-                "💸 **Gestão de Despesas**\n\n"
-                "Comandos disponíveis:\n"
-                "• /despesas - Menu completo\n"
-                "• /resumo - Análise detalhada\n"
-                "• /nova_despesa - Adicionar gasto\n\n"
-                "Use qualquer um dos comandos acima para continuar."
+                """💸 **Sistema de Despesas**
+
+Para registrar uma despesa, use:
+**`/gastos`**
+
+**Recursos disponíveis:**
+• 💳 Parcelamento até 24x
+• 📂 8 categorias predefinidas
+• 🏦 6 contas de despesa
+• 📅 Controle de vencimentos
+
+**Bancos disponíveis:**
+🟣 C6 Bank • 🟡 Nubank • 🔴 Santander
+
+Digite `/gastos` para registrar!""",
+                parse_mode='Markdown'
             )
-        elif data == "manage_goals":
+        elif data == "check_balance":
             await query.edit_message_text(
-                "🎯 **Gestão de Metas**\n\n"
-                "Comandos disponíveis:\n"
-                "• /metas - Menu completo\n"
-                "• /nova_meta - Criar meta\n"
-                "• /progresso - Acompanhar evolução\n\n"
-                "Use qualquer um dos comandos acima para continuar."
+                """💰 **Consultar Saldo**
+
+Para ver seus saldos, use:
+**`/saldo`**
+
+**O que você verá:**
+• 🏦 Todas as contas cadastradas
+• 💰 Saldos atualizados
+• 🎮 Separação: dados reais vs demo
+
+**Outras opções:**
+• `/resumo` - Dashboard completo
+• `/demo` - Carregar dados de exemplo
+
+Digite `/saldo` para consultar!""",
+                parse_mode='Markdown'  
+            )
+        elif data == "view_profile":
+            await query.edit_message_text(
+                """👤 **Seu Perfil**
+
+Para ver suas informações, use:
+**`/perfil`**
+
+**Informações disponíveis:**
+• 📧 Email cadastrado
+• 👤 Nome completo  
+• 🆔 ID do sistema
+• ⏰ Último acesso
+
+**Comandos úteis:**
+• `/debug_user` - Detalhes técnicos
+• `/trocar_senha` - Alterar senha
+
+Digite `/perfil` para ver!""",
+                parse_mode='Markdown'
             )
         elif data == "financial_summary":
             await query.edit_message_text(
-                "📊 **Resumo Financeiro**\n\n"
-                "Comandos disponíveis:\n"
-                "• /resumo - Dashboard completo\n"
-                "• /relatorio - Análise detalhada\n"
-                "• /analise - Insights com IA\n\n"
-                "Use qualquer um dos comandos acima para continuar."
+                """📊 **Dashboard Financeiro**
+
+Para ver seu resumo completo, use:
+**`/resumo`**
+
+**Informações disponíveis:**
+• 📈 Receitas do mês
+• 📉 Despesas por categoria  
+• 💰 Saldo atual
+• 🎯 Progresso das metas
+
+**Análises avançadas:**
+• `/analise` - Análise com IA
+• `/relatorio` - Relatório detalhado
+
+Digite `/resumo` para ver seu dashboard!""",
+                parse_mode='Markdown'
             )
-        elif data == "user_profile":
+        elif data == "about_system":
             await query.edit_message_text(
-                "👤 **Perfil do Usuário**\n\n"
-                "Comandos disponíveis:\n"
-                "• /perfil - Ver perfil completo\n"
-                "• /trocar_senha - Alterar senha\n"
-                "• /logout - Sair do sistema\n\n"
-                "Use qualquer um dos comandos acima para continuar."
+                """ℹ️ **Bot IA Financeiro - Sistema Manual**
+
+🤖 **Sistema Atual:**
+• 100% manual - controle total dos dados
+• 8 contas predefinidas (Inter, C6, Nubank, Santander)
+• Parcelamento automático até 24x
+• Análise inteligente com OpenAI GPT-4
+
+� **Funcionalidades:**
+• Sistema de receitas guiado
+• Despesas com parcelamento
+• Relatórios detalhados  
+• Análises personalizadas
+
+� **Segurança:**
+• Dados exclusivamente seus
+• Sem integração bancária externa
+• Conformidade com LGPD""",
+                parse_mode='Markdown'
             )
         else:
+            # Callback não reconhecido - mostrar ajuda
             await query.edit_message_text(
-                "❌ Opção não reconhecida. Use /start para voltar ao menu principal."
+                """❌ **Opção não reconhecida**
+
+**Comandos disponíveis:**
+• `/receitas` - Adicionar receitas
+• `/gastos` - Registrar despesas
+• `/saldo` - Ver contas e saldos
+• `/perfil` - Seu perfil
+• `/resumo` - Dashboard completo
+
+**Acesso rápido:**
+• `/demo` - Dados de exemplo  
+• `/entrar` - Login automático
+• `/start` - Voltar ao menu
+
+Digite um comando para continuar!""",
+                parse_mode='Markdown'
             )
 
     async def get_or_create_user(self, telegram_user):
