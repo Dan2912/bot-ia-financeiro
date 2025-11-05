@@ -358,13 +358,37 @@ Entre em contato com o suporte para reativar.
         
         if data == "start_login":
             await query.edit_message_text(
-                "🔐 Para fazer login, use o comando /login\n\n"
-                "Suas credenciais são protegidas com criptografia."
+                """🔐 **Opções de Login**
+
+**Problemas com login? Temos soluções:**
+
+🔧 **Comandos disponíveis:**
+• `/login` - Login tradicional com senha
+• `/entrar` - Login automático (recomendado)
+• `/reset_senha` - Resetar senha para 123456
+• `/debug_user` - Ver informações da conta
+
+**💡 Recomendação:** Use `/entrar` para login automático baseado no seu Telegram!"""
             )
         elif data == "start_registration":
             await query.edit_message_text(
-                "📝 Para criar sua conta, use o comando /cadastro\n\n"
-                "Este processo é seguro e criptografado."
+                """📝 **Criar Nova Conta**
+
+**✅ Processo simples e seguro:**
+
+1️⃣ Use o comando `/cadastro`
+2️⃣ Digite seu nome completo
+3️⃣ Informe seu email
+4️⃣ Crie uma senha segura
+5️⃣ Pronto! Conta criada
+
+**🎯 Alternativa rápida:**
+Se quiser pular o cadastro, você pode usar diretamente:
+• `/demo` - Para dados de exemplo
+• `/receitas` - Para adicionar receitas
+• `/gastos` - Para registrar despesas
+
+**Digite `/cadastro` para começar!**"""
             )
         elif data == "about_system":
             await query.edit_message_text(
@@ -552,9 +576,10 @@ Entre em contato com o suporte para reativar.
                 logger.warning("Credenciais Pluggy não configuradas - modo local")
                 return []
             
-            # Importar cliente Pluggy
+            # Sistema Pluggy desabilitado - usar contas manuais
             try:
-                from pluggy_client import PluggyClient
+                # from pluggy_client import PluggyClient  # DESABILITADO
+                raise ImportError("Sistema Pluggy substituído por sistema manual")
                 
                 # Usar Pluggy para buscar contas do usuário
                 try:
