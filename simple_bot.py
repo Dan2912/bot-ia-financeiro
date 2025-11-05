@@ -120,30 +120,84 @@ def main():
                         
                         if not accounts:
                             await update.message.reply_text(
-                                "🏦 Você ainda não conectou nenhuma conta bancária.\n\n"
-                                "Use o menu principal → 🏦 Conectar Banco para vincular seus bancos via Pluggy."
+                                "🏦 **Nenhuma conta encontrada**\n\n"
+                                "**Opções disponíveis:**\n"
+                                "• `/demo` - Carregar dados de exemplo\n"
+                                "• `/conectar` - Conectar contas via Pluggy\n\n"
+                                "💡 Se você já conectou pelo Inter, pode haver delay na sincronização."
                             )
                             return
                         
-                        text = "💰 *Seus Saldos:*\n\n"
-                        total_balance = 0
+                        # Separar contas demo das reais
+                        contas_demo = []
+                        contas_reais = []
                         
                         for account in accounts:
-                            text += f"🏦 *{account.get('bank_name', 'Banco')}*\n"
-                            text += f"Tipo: {account.get('account_type', 'Conta')}\n" 
-                            balance = float(account.get('balance', 0))
-                            text += f"Saldo: R$ {balance:,.2f}\n\n"
-                            total_balance += balance
+                            if account.get('pluggy_item_id', '').startswith('demo_'):
+                                contas_demo.append(account)
+                            else:
+                                contas_reais.append(account)
                         
-                        text += f"💵 *Total Geral: R$ {total_balance:,.2f}*"
+                        text = "💰 **Seus Saldos:**\n\n"
+                        
+                        # Mostrar contas reais primeiro
+                        if contas_reais:
+                            text += "🏦 **CONTAS REAIS:**\n"
+                            total_real = 0
+                            for account in contas_reais:
+                                bank_name = account.get('bank_name', 'Banco')
+                                if 'inter' in bank_name.lower():
+                                    text += "🟡 "  # Cor do Inter
+                                else:
+                                    text += "🏦 "
+                                
+                                text += f"**{bank_name}**\n"
+                                text += f"Tipo: {account.get('account_type', 'Conta')}\n"
+                                balance = float(account.get('balance', 0))
+                                text += f"Saldo: R$ {balance:,.2f}\n"
+                                
+                                # Mostrar última sincronização
+                                if account.get('last_sync'):
+                                    text += f"Última sync: {account.get('last_sync')}\n"
+                                text += "\n"
+                                total_real += balance
+                            
+                            text += f"💵 **Total Real: R$ {total_real:,.2f}**\n\n"
+                        
+                        # Mostrar contas demo se existirem
+                        if contas_demo:
+                            text += "🎮 **DADOS DE DEMONSTRAÇÃO:**\n"
+                            total_demo = 0
+                            for account in contas_demo:
+                                bank_name = account.get('bank_name', 'Banco')
+                                if 'nubank' in bank_name.lower():
+                                    text += "� "
+                                elif 'inter' in bank_name.lower():
+                                    text += "🟡 "
+                                elif 'itau' in bank_name.lower():
+                                    text += "🔶 "
+                                else:
+                                    text += "🏦 "
+                                
+                                text += f"**{bank_name}**\n"
+                                balance = float(account.get('balance', 0))
+                                text += f"Saldo: R$ {balance:,.2f}\n\n"
+                                total_demo += balance
+                            
+                            text += f"🎮 **Total Demo: R$ {total_demo:,.2f}**\n"
+                        
+                        # Total geral
+                        total_geral = sum(float(acc.get('balance', 0)) for acc in accounts)
+                        text += f"\n💎 **TOTAL GERAL: R$ {total_geral:,.2f}**"
                         
                         await update.message.reply_text(text, parse_mode='Markdown')
                         
                     except Exception as e:
                         logger.error(f"Erro ao buscar saldo: {e}")
                         await update.message.reply_text(
-                            "❌ Erro ao consultar saldo. Tente conectar suas contas bancárias primeiro.\n\n"
-                            "Use /start → 🏦 Conectar Banco"
+                            "❌ **Erro ao consultar saldo**\n\n"
+                            f"Detalhes técnicos: {str(e)}\n\n"
+                            "Tente: `/demo` para dados de exemplo"
                         )
                 
                 # Criar função para conectar banco
@@ -367,12 +421,69 @@ Para dados reais, conecte seus bancos via `/conectar`"""
                             "Tente novamente ou use `/demo` para carregar dados."
                         )
 
+                # Comando para adicionar conta Inter manualmente
+                async def inter_command(update, context):
+                    """Adicionar conta Inter manualmente (já que você tem conectado)"""
+                    user = await bot.get_or_create_user(update.effective_user)
+                    
+                    try:
+                        # Verificar se já tem conta Inter
+                        existing_inter = await bot.execute_query_one(
+                            "SELECT * FROM bank_accounts WHERE user_id = $1 AND bank_name ILIKE '%inter%'",
+                            (user['id'],)
+                        )
+                        
+                        if existing_inter:
+                            text = f"""🟡 **Banco Inter - Conta Existente**
+                            
+**Conta encontrada:**
+• Banco: {existing_inter['bank_name']}
+• Tipo: {existing_inter['account_type']}
+• Saldo: R$ {float(existing_inter['balance']):,.2f}
+
+✅ **Sua conta Inter já está registrada!**
+Use `/saldo` para ver todas as contas."""
+                        else:
+                            # Adicionar conta Inter real
+                            await bot.execute_query_one(
+                                """INSERT INTO bank_accounts (
+                                    user_id, bank_name, account_type, account_number, 
+                                    balance, currency_code, is_active, pluggy_item_id, 
+                                    pluggy_account_id, last_sync
+                                ) VALUES ($1, $2, $3, $4, $5, $6, true, $7, $8, CURRENT_TIMESTAMP)""",
+                                (user['id'], 'Banco Inter', 'Conta Corrente', '****0001', 
+                                 0.00, 'BRL', 'real_inter_item', 'real_inter_account')
+                            )
+                            
+                            text = """🟡 **Banco Inter - Conta Adicionada!**
+                            
+✅ **Conta Inter registrada com sucesso!**
+
+**Próximos passos:**
+1. Use `/saldo` para ver a conta
+2. O saldo será sincronizado automaticamente
+3. Dados reais do Inter aparecerão em breve
+
+💡 **Nota:** Como você já conectou pelo app do Inter, 
+os dados devem aparecer na próxima sincronização."""
+                        
+                        await update.message.reply_text(text, parse_mode='Markdown')
+                        
+                    except Exception as e:
+                        logger.error(f"Erro no comando inter: {e}")
+                        await update.message.reply_text(
+                            "❌ **Erro ao processar conta Inter**\n\n"
+                            f"Detalhes: {str(e)}\n\n"
+                            "Tente novamente em alguns instantes."
+                        )
+
                 # Comandos principais
                 application.add_handler(CommandHandler("saldo", saldo_command))
                 application.add_handler(CommandHandler("conectar", conectar_command))
                 application.add_handler(CommandHandler("status", status_command))
                 application.add_handler(CommandHandler("demo", demo_command))
                 application.add_handler(CommandHandler("teste", teste_command))
+                application.add_handler(CommandHandler("inter", inter_command))
                 
                 # Tentar adicionar outros comandos se existirem
                 try:

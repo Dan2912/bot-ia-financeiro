@@ -757,12 +757,18 @@ Entre em contato com o suporte para reativar.
             ]
             
             for name, type_, icon in categories:
-                query = """
-                    INSERT INTO categories (user_id, name, type, icon, is_active)
-                    VALUES ($1, $2, $3, $4, true)
-                    ON CONFLICT (user_id, name) DO NOTHING
-                """
-                await self.execute_query_one(query, (user_id, name, type_, icon))
+                # Verificar se já existe primeiro
+                existing = await self.execute_query_one(
+                    "SELECT id FROM categories WHERE user_id = $1 AND name = $2", 
+                    (user_id, name)
+                )
+                
+                if not existing:
+                    query = """
+                        INSERT INTO categories (user_id, name, type, icon, is_active)
+                        VALUES ($1, $2, $3, $4, true)
+                    """
+                    await self.execute_query_one(query, (user_id, name, type_, icon))
                 
         except Exception as e:
             logger.warning(f"Erro ao criar categorias demo: {e}")
@@ -770,6 +776,8 @@ Entre em contato com o suporte para reativar.
     async def create_demo_goal(self, user_id):
         """Criar meta de exemplo"""
         try:
+            from datetime import date
+            
             query = """
                 INSERT INTO goals (
                     user_id, title, description, goal_type, target_amount,
@@ -784,7 +792,7 @@ Entre em contato com o suporte para reativar.
                 'emergency_fund',
                 10000.00,
                 3200.00,
-                '2025-12-31',
+                date(2025, 12, 31),
                 1
             )
             
@@ -796,6 +804,8 @@ Entre em contato com o suporte para reativar.
     async def create_demo_transactions(self, user_id):
         """Criar transações de exemplo"""
         try:
+            from datetime import date
+            
             # Buscar IDs das categorias
             alimentacao = await self.execute_query_one(
                 "SELECT id FROM categories WHERE user_id = $1 AND name = 'Alimentação'", 
@@ -811,21 +821,21 @@ Entre em contato com o suporte para reativar.
             )
             
             transactions = [
-                ('Supermercado', 'Compras semanais', 125.50, 'expense', alimentacao['id'] if alimentacao else None, '2025-11-03'),
-                ('Uber', 'Corrida para trabalho', 25.00, 'expense', transporte['id'] if transporte else None, '2025-11-02'),
-                ('Salário Novembro', 'Pagamento mensal', 4500.00, 'income', salario['id'] if salario else None, '2025-11-01'),
-                ('Restaurante', 'Almoço executivo', 45.00, 'expense', alimentacao['id'] if alimentacao else None, '2025-10-30'),
-                ('Combustível', 'Abastecimento', 180.00, 'expense', transporte['id'] if transporte else None, '2025-10-28')
+                ('Supermercado', 'Compras semanais', 125.50, 'expense', alimentacao['id'] if alimentacao else None, date(2025, 11, 3)),
+                ('Uber', 'Corrida para trabalho', 25.00, 'expense', transporte['id'] if transporte else None, date(2025, 11, 2)),
+                ('Salário Novembro', 'Pagamento mensal', 4500.00, 'income', salario['id'] if salario else None, date(2025, 11, 1)),
+                ('Restaurante', 'Almoço executivo', 45.00, 'expense', alimentacao['id'] if alimentacao else None, date(2025, 10, 30)),
+                ('Combustível', 'Abastecimento', 180.00, 'expense', transporte['id'] if transporte else None, date(2025, 10, 28))
             ]
             
-            for title, desc, amount, type_, cat_id, date in transactions:
+            for title, desc, amount, type_, cat_id, transaction_date in transactions:
                 query = """
                     INSERT INTO transactions (
                         user_id, title, description, amount, type, category_id,
                         transaction_date, status, notes
                     ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'paid', 'DEMO - Dados de exemplo')
                 """
-                await self.execute_query_one(query, (user_id, title, desc, amount, type_, cat_id, date))
+                await self.execute_query_one(query, (user_id, title, desc, amount, type_, cat_id, transaction_date))
                 
         except Exception as e:
             logger.warning(f"Erro ao criar transações demo: {e}")
