@@ -441,10 +441,91 @@ def main():
                     """Debug do comando perfil"""
                     await update.message.reply_text("🔧 DEBUG: Comando /perfil funcionando!")
                 
+                # Comando para debugar handlers registrados
+                async def debug_handlers_command(update, context):
+                    """Debug dos handlers registrados"""
+                    handlers_info = []
+                    for group_id, group_handlers in application.handlers.items():
+                        handlers_info.append(f"**Grupo {group_id}:** {len(group_handlers)} handlers")
+                        for handler in group_handlers[:5]:  # Mostrar apenas os primeiros 5
+                            if hasattr(handler, 'command') and handler.command:
+                                handlers_info.append(f"  - Comando: /{handler.command[0]}")
+                            elif hasattr(handler, 'callback') and handler.callback:
+                                handlers_info.append(f"  - Handler: {handler.callback.__name__}")
+                    
+                    await update.message.reply_text(
+                        f"🔧 **Handlers Registrados:**\n\n" + 
+                        "\n".join(handlers_info[:15]) +  # Limitar a 15 linhas
+                        "\n\n💡 Total de grupos: " + str(len(application.handlers)),
+                        parse_mode='Markdown'
+                    )
+                
                 # Registrar comandos de debug
                 application.add_handler(CommandHandler("debug_receitas", debug_receitas_command))
                 application.add_handler(CommandHandler("debug_gastos", debug_gastos_command))
                 application.add_handler(CommandHandler("debug_perfil", debug_perfil_command))
+                application.add_handler(CommandHandler("debug_handlers", debug_handlers_command))
+                
+                # Comando de login automático simplificado
+                async def entrar_simples_command(update, context):
+                    """Login automático funcionando"""
+                    user = await bot.get_or_create_user(update.effective_user)
+                    
+                    await update.message.reply_text(
+                        f"✅ **Login automático realizado!**\n\n"
+                        f"👤 **Usuário:** {user['full_name']}\n"
+                        f"🆔 **ID:** {user['id']}\n"
+                        f"📧 **Email:** {user.get('email', 'Não cadastrado')}\n\n"
+                        f"**Sistema funcionando:**\n"
+                        f"• Digite `/receitas` para testar receitas\n"
+                        f"• Digite `/gastos` para testar despesas\n"
+                        f"• Digite `/saldo` para ver contas\n\n"
+                        f"**Debug disponível:**\n"
+                        f"• `/debug_handlers` - Ver handlers registrados"
+                    )
+                
+                application.add_handler(CommandHandler("entrar", entrar_simples_command))
+                
+                # Comandos simples que funcionam (para teste)
+                async def receitas_simples_command(update, context):
+                    """Comando receitas simples"""
+                    user = await bot.get_or_create_user(update.effective_user)
+                    
+                    await update.message.reply_text(
+                        "💰 **Sistema de Receitas Ativo!**\n\n"
+                        "🏦 **Contas de receita disponíveis:**\n"
+                        "🟢 Inter PF - Pessoa Física\n"
+                        "🔵 Inter PJ - Pessoa Jurídica\n\n"
+                        "📂 **Categorias disponíveis:**\n"
+                        "💼 Salário\n"
+                        "🤝 Fornecedor\n"
+                        "💻 Freelance\n"
+                        "📈 Investimentos\n"
+                        "💰 Outros\n\n"
+                        "**Em breve:** Interface guiada completa!"
+                    )
+                
+                async def gastos_simples_command(update, context):
+                    """Comando gastos simples"""
+                    user = await bot.get_or_create_user(update.effective_user)
+                    
+                    await update.message.reply_text(
+                        "💸 **Sistema de Despesas Ativo!**\n\n"
+                        "🏦 **Contas de despesa disponíveis:**\n"
+                        "🟣 C6 Bank PF/PJ\n"
+                        "🟡 Nubank PF/PJ\n"
+                        "🔴 Santander PF/PJ\n\n"
+                        "📂 **Categorias disponíveis:**\n"
+                        "🍽️ Alimentação • 🚗 Transporte • 🏠 Moradia\n"
+                        "💊 Saúde • 🎮 Lazer • 👕 Vestuário\n"
+                        "📚 Educação • 📱 Outros\n\n"
+                        "💳 **Parcelamento:** até 24x\n"
+                        "**Em breve:** Interface guiada completa!"
+                    )
+                
+                # Registrar comandos simples
+                application.add_handler(CommandHandler("receitas", receitas_simples_command))
+                application.add_handler(CommandHandler("gastos", gastos_simples_command))
                 
                 logger.info("💰 Funcionalidades financeiras carregadas (sistema manual)")
                 
@@ -491,9 +572,9 @@ def main():
                     "💡 **Dica:** Use `/start` para ver o menu completo!"
                 )
         
-        # Adicionar handler de fallback com prioridade baixa
+        # Adicionar handler de fallback com prioridade mais baixa (depois de todos os outros)
         from telegram.ext import MessageHandler, filters
-        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, fallback_handler), group=99)
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, fallback_handler), group=100)
         
         logger.info("🚀 Bot configurado com handlers de fallback. Iniciando polling...")
         
