@@ -1,64 +1,83 @@
-# 🤖 Bot IA Financeiro - Telegram
+# 🤖 Bot IA Financeiro - Sistema Manual Completo
 
-> **Sistema completo de gestão financeira pessoal com Inteligência Artificial**
+> **Gestão financeira pessoal inteligente com sistema manual e IA integrada**
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
 [![Railway](https://img.shields.io/badge/Deploy-Railway-purple.svg)](https://railway.app)
 [![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue.svg)](https://postgresql.org)
 [![OpenAI](https://img.shields.io/badge/AI-OpenAI_GPT--4-green.svg)](https://openai.com)
+[![Sistema](https://img.shields.io/badge/Status-Ativo-green.svg)](https://t.me/seu_bot)
+
+## 🎯 **Visão Geral**
+
+Bot do Telegram para controle financeiro pessoal com **sistema manual completo**, eliminando dependências de APIs bancárias externas. Focado na **experiência do usuário** com interfaces guiadas, dados reais controlados pelo próprio usuário e análises de IA personalizadas.
+
+### **✨ Diferenciais**
+- 🔄 **Sistema 100% Manual** - Controle total dos seus dados
+- 🏦 **Contas Predefinidas** - Inter, C6, Nubank, Santander (PJ/PF)  
+- 💳 **Parcelamento Inteligente** - Até 24x com cálculo automático
+- 🤖 **IA Personalizada** - OpenAI GPT-4 para análises financeiras
+- 📱 **UX Guiada** - Interface conversacional intuitiva
+- 🔒 **Segurança Total** - Dados exclusivamente seus, sem integrações bancárias
 
 ## 🚀 **Funcionalidades Principais**
 
-### 💸 **Gestão de Despesas**
-- ✅ Cadastro rápido de gastos com categorização automática
-- ✅ Sistema de parcelamento inteligente  
-- ✅ 8 categorias padrão + personalizáveis
-- ✅ Relatórios detalhados com análise de tendências
+### � **Sistema de Receitas**
+- ✅ **Categorias Inteligentes**: Salário, Fornecedor, Freelance, Investimentos
+- ✅ **Contas de Receita**: Inter PF/PJ como padrão
+- ✅ **Interface Guiada**: Processo passo-a-passo com validações
+- ✅ **Recorrência**: Receitas fixas mensais automáticas
 
-### 🎯 **Metas Financeiras**
-- ✅ 6 tipos de meta (Poupança, Viagem, Compra, Emergência, Investimento, Quitação)
-- ✅ Progresso automático e manual
-- ✅ Sistema de prioridades e notificações
-- ✅ Acompanhamento visual com percentuais
+### 💸 **Sistema de Despesas**  
+- ✅ **Parcelamento Avançado**: 1x até 24x com datas automáticas
+- ✅ **Contas Diversificadas**: C6, Nubank, Santander (PJ/PF)
+- ✅ **Categorização Automática**: 8 categorias padrão + personalizáveis
+- ✅ **Controle de Vencimentos**: Gestão completa de datas
 
-### 🏦 **Integração Bancária**
-- ✅ Pluggy API - Conexão com +200 bancos brasileiros
-- ✅ Open Finance certificado e seguro
-- ✅ Sincronização automática de saldos e extratos
-- ✅ Suporte a múltiplas contas bancárias
+### 🏦 **Gestão de Contas**
+- ✅ **8 Contas Predefinidas**: Configuradas e prontas para uso
+- ✅ **Codificação por Cores**: Identificação visual rápida
+- ✅ **Separação Inteligente**: Receitas (Inter) vs Despesas (outros bancos)
+- ✅ **Flexibilidade Total**: Adicione suas próprias contas
 
 ### 🤖 **Inteligência Artificial**
-- ✅ OpenAI GPT-4 para análises personalizadas
-- ✅ Conselhos de investimento baseados no perfil
-- ✅ Alertas inteligentes de gastos excessivos
-- ✅ Projeções e tendências financeiras
+- ✅ **Análises Personalizadas**: OpenAI GPT-4 para insights financeiros
+- ✅ **Conselhos Inteligentes**: Baseados no seu perfil de gastos
+- ✅ **Detecção de Padrões**: Identificação de tendências e anomalias
+- ✅ **Projeções Futuras**: Previsões baseadas no histórico
 
-### 🔒 **Segurança Enterprise**
-- ✅ Autenticação completa com hash bcrypt
-- ✅ Controle de sessões e tentativas de login
-- ✅ Conformidade com LGPD
-- ✅ Credenciais exclusivamente no Railway (nunca no código)
+## 📱 **Comandos Essenciais**
 
-## 📱 **Comandos Principais**
-
+### 🔐 **Autenticação**
 ```bash
-# 🔐 Autenticação
-/cadastro      # Criar conta no sistema
-/login         # Fazer login seguro
-/perfil        # Ver informações da conta
+/start          # Iniciar o bot e ver menu principal
+/cadastro       # Criar conta no sistema  
+/login          # Login tradicional com senha
+/entrar         # Login automático (recomendado)
+/reset_senha    # Resetar senha para 123456
+```
 
-# 💸 Gestão de Despesas  
-/despesas      # Menu completo de gastos
-/nova_despesa  # Cadastro rápido de despesa
-/relatorio     # Análise detalhada (30 dias)
+### � **Gestão Financeira**
+```bash
+/receitas       # Sistema completo de receitas
+/gastos         # Sistema completo de despesas  
+/contas         # Gerenciar contas bancárias
+/demo          # Dados de exemplo para teste
+```
 
-# 🎯 Metas Financeiras
-/metas         # Gerenciar objetivos financeiros
-/nova_meta     # Criar meta rapidamente
+### 📊 **Análises e Relatórios**
+```bash
+/resumo         # Visão geral da situação financeira
+/analise        # Análise detalhada com IA
+/relatorio      # Relatório mensal completo
+/metas          # Gerenciar objetivos financeiros
+```
 
-# 📊 Análises
-/resumo        # Visão geral da situação
-/analise       # Análise IA personalizada
+### 🛠️ **Comandos de Debug** (para testes)
+```bash
+/debug_user     # Ver informações da conta
+/emergency_login # Login de emergência
+/simple_login   # Login simplificado
 ```
 
 ## 🏗️ **Arquitetura Técnica**

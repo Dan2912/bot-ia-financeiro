@@ -1,36 +1,142 @@
-# Sistema de Gestão Financeira - Bot IA Telegram
+# 💰 Sistema Financeiro Manual - Bot IA Telegram
 
-## 💰 Funcionalidades Implementadas
+> **Documentação técnica completa do sistema de gestão financeira manual**
 
-### 🗄️ **Estrutura do Banco de Dados**
+## 🎯 **Arquitetura do Sistema Manual**
 
-#### **Tabela `categories`**
-- Categorias personalizadas para despesas e receitas
-- Suporte a ícones e cores
-- Categorias padrão criadas automaticamente
+### 🏦 **Sistema de Contas Predefinidas**
 
-#### **Tabela `transactions`**
-- Despesas e receitas com detalhamento completo
-- Sistema de parcelamento automático
-- Recorrência configurável
-- Status de pagamento
-- Tags e anotações
+O sistema utiliza **8 contas bancárias** predefinidas para organização e controle:
 
-#### **Tabela `goals`**
-- Metas financeiras com diferentes tipos
-- Progresso automático e manual
-- Notificações configuráveis
-- Prioridades e datas limite
+#### **💚 Contas de Receita (Inter)**
+```python
+🟢 Inter PF  # Banco Inter Pessoa Física
+            # - Salários, freelances, renda pessoal
+            
+🔵 Inter PJ  # Banco Inter Pessoa Jurídica  
+            # - Faturamento empresarial, fornecedores
+```
 
-#### **Tabela `budgets`**
-- Orçamentos mensais por categoria
-- Alertas de limite atingido
-- Comparação com gastos reais
+#### **💳 Contas de Despesa (Múltiplos Bancos)**
+```python
+🟣 C6 Bank PF      # C6 Bank Pessoa Física
+🟪 C6 Bank PJ      # C6 Bank Pessoa Jurídica
+🟡 Nubank PF       # Nubank Pessoa Física
+🟠 Nubank PJ       # Nubank Pessoa Jurídica  
+🔴 Santander PF    # Santander Pessoa Física
+🔶 Santander PJ    # Santander Pessoa Jurídica
+```
 
-#### **Tabela `alerts`**
-- Sistema de notificações inteligentes
-- Diferentes tipos de alerta
-- Controle de leitura e expiração
+### 🗄️ **Schema do Banco de Dados (PostgreSQL)**
+
+#### **Tabela `users`** - Sistema de Usuários
+```sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    telegram_id BIGINT UNIQUE NOT NULL,
+    name VARCHAR(255),
+    email VARCHAR(255) UNIQUE,
+    password_hash VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### **Tabela `accounts`** - Contas Bancárias
+```sql
+CREATE TABLE accounts (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    account_name VARCHAR(100) NOT NULL,
+    bank_name VARCHAR(100) NOT NULL,
+    account_type VARCHAR(50), -- 'PF' ou 'PJ'
+    color VARCHAR(20),
+    is_revenue_account BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### **Tabela `categories`** - Categorias de Transações
+```sql
+CREATE TABLE categories (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    name VARCHAR(100) NOT NULL,
+    icon VARCHAR(20),
+    category_type VARCHAR(20), -- 'receita' ou 'despesa'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### **Tabela `transactions`** - Receitas e Despesas
+```sql
+CREATE TABLE transactions (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    account_id INTEGER REFERENCES accounts(id),
+    category_id INTEGER REFERENCES categories(id),
+    description TEXT NOT NULL,
+    amount DECIMAL(12,2) NOT NULL,
+    transaction_type VARCHAR(20), -- 'receita' ou 'despesa'
+    transaction_date DATE DEFAULT CURRENT_DATE,
+    is_installment BOOLEAN DEFAULT FALSE,
+    installment_number INTEGER,
+    total_installments INTEGER,
+    parent_transaction_id INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### **Tabela `installments`** - Controle de Parcelamento
+```sql
+CREATE TABLE installments (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    parent_transaction_id INTEGER REFERENCES transactions(id),
+    installment_number INTEGER NOT NULL,
+    total_installments INTEGER NOT NULL,
+    amount DECIMAL(12,2) NOT NULL,
+    due_date DATE NOT NULL,
+    is_paid BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### **Tabela `goals`** - Metas Financeiras
+```sql
+CREATE TABLE goals (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    name VARCHAR(255) NOT NULL,
+    target_amount DECIMAL(12,2) NOT NULL,
+    current_amount DECIMAL(12,2) DEFAULT 0,
+    goal_type VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### **Tabela `budgets`** - Orçamentos por Categoria
+```sql
+CREATE TABLE budgets (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    category_id INTEGER REFERENCES categories(id),
+    amount DECIMAL(12,2) NOT NULL,
+    month INTEGER NOT NULL,
+    year INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### **Tabela `user_sessions`** - Controle de Sessões
+```sql
+CREATE TABLE user_sessions (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    telegram_id BIGINT NOT NULL,
+    last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE
+);
+```
 
 ## 📱 **Comandos Disponíveis**
 
