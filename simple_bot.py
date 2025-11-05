@@ -107,6 +107,55 @@ def main():
             application.add_handler(CommandHandler('perfil', bot_commands.profile_command))
             application.add_handler(CommandHandler('logout', bot_commands.logout_command))
             
+            # Adicionar funcionalidades financeiras
+            try:
+                # Comandos principais do bot original
+                application.add_handler(CommandHandler("saldo", bot.balance_callback))
+                application.add_handler(CommandHandler("cartoes", bot_commands.cards_callback))
+                application.add_handler(CommandHandler("gastos", bot.ai_analysis_callback))
+                application.add_handler(CommandHandler("analise", bot.ai_analysis_callback))
+                
+                # Funcionalidades de despesas e metas
+                from bot_commands import WAITING_EXPENSE_TITLE, WAITING_EXPENSE_AMOUNT, WAITING_EXPENSE_CATEGORY
+                from bot_commands import WAITING_GOAL_TITLE, WAITING_GOAL_AMOUNT, WAITING_GOAL_TYPE
+                
+                # ConversationHandlers financeiros
+                expense_handler = ConversationHandler(
+                    entry_points=[CommandHandler('despesas', bot_commands.expenses_command)],
+                    states={
+                        WAITING_EXPENSE_TITLE: [MessageHandler(filters.TEXT & ~filters.COMMAND, bot_commands.receive_expense_title)],
+                        WAITING_EXPENSE_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, bot_commands.receive_expense_amount)],
+                        WAITING_EXPENSE_CATEGORY: [CallbackQueryHandler(bot_commands.process_expense_category)],
+                    },
+                    fallbacks=[CommandHandler('cancelar', bot_commands.cancel_operation)]
+                )
+                
+                goal_handler = ConversationHandler(
+                    entry_points=[CommandHandler('metas', bot_commands.goals_command)],
+                    states={
+                        WAITING_GOAL_TITLE: [MessageHandler(filters.TEXT & ~filters.COMMAND, bot_commands.receive_goal_title)],
+                        WAITING_GOAL_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, bot_commands.receive_goal_amount)],
+                        WAITING_GOAL_TYPE: [CallbackQueryHandler(bot_commands.process_goal_type)],
+                    },
+                    fallbacks=[CommandHandler('cancelar', bot_commands.cancel_operation)]
+                )
+                
+                application.add_handler(expense_handler)
+                application.add_handler(goal_handler)
+                
+                # Comandos financeiros diretos
+                application.add_handler(CommandHandler('relatorio', bot_commands.expense_report_command))
+                application.add_handler(CommandHandler('resumo', bot_commands.financial_summary_command))
+                
+                # Comandos de atalho
+                application.add_handler(CommandHandler('nova_despesa', bot_commands.start_add_expense))
+                application.add_handler(CommandHandler('nova_meta', bot_commands.start_add_goal))
+                
+                logger.info("💰 Funcionalidades financeiras carregadas (saldo, cartões, IA)")
+                
+            except Exception as e:
+                logger.warning(f"⚠️ Algumas funcionalidades financeiras não disponíveis: {e}")
+            
             logger.info("✅ Funcionalidades avançadas carregadas")
             
         except ImportError as e:
