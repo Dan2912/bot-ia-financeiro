@@ -69,9 +69,9 @@ PORT=8080
 
 ### 4. ✅ Configurações do Projeto
 - **Procfile:** `web: python main.py`
-- **Railway.toml:** Configurações otimizadas
-- **requirements.txt:** Todas as dependências
-- **Dockerfile:** Para builds alternativas
+- **railway.toml:** `startCommand = "python main.py"`
+- **runtime.txt:** `python-3.11.7`
+- **requirements.txt:** Todas as dependências incluídas
 
 ## 🧪 Testando a Aplicação
 
