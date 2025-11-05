@@ -401,11 +401,14 @@ Entre em contato com o suporte para reativar.
 
 async def main():
     """Função principal"""
-    # Iniciar servidor de health check em thread separada
-    health_thread = threading.Thread(target=start_health_server, daemon=True)
-    health_thread.start()
-    PORT = int(os.getenv('PORT', 8080))
-    logger.info(f"🌐 Servidor de health check iniciado na porta {PORT}")
+    # Iniciar servidor de health check em thread separada APENAS se não estiver em loop asyncio
+    try:
+        health_thread = threading.Thread(target=start_health_server, daemon=True)
+        health_thread.start()
+        PORT = int(os.getenv('PORT', 8080))
+        logger.info(f"🌐 Servidor de health check iniciado na porta {PORT}")
+    except Exception as e:
+        logger.warning(f"Health server warning: {e}")
     
     bot = FinancialBot()
     
