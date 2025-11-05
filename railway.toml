@@ -1,4 +1,4 @@
 # Railway.app deployment configuration
 
 [deploy]
-startCommand = "python main.py"
+startCommand = "python railway_bot.py"
