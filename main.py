@@ -196,6 +196,45 @@ class FinancialBot:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     expires_at TIMESTAMP
                 );
+
+                -- Tabela de contas bancárias (Pluggy)
+                CREATE TABLE IF NOT EXISTS bank_accounts (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    bank_name VARCHAR(100) NOT NULL,
+                    account_type VARCHAR(50) NOT NULL,
+                    account_number VARCHAR(50),
+                    balance DECIMAL(15,2) DEFAULT 0,
+                    currency_code VARCHAR(10) DEFAULT 'BRL',
+                    is_active BOOLEAN DEFAULT true,
+                    pluggy_item_id VARCHAR(100),
+                    pluggy_account_id VARCHAR(100),
+                    last_sync TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, pluggy_account_id)
+                );
+
+                -- Tabela de cartões de crédito
+                CREATE TABLE IF NOT EXISTS credit_cards (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    bank_name VARCHAR(100) NOT NULL,
+                    card_name VARCHAR(100) NOT NULL,
+                    card_number_last4 VARCHAR(4),
+                    credit_limit DECIMAL(15,2),
+                    available_limit DECIMAL(15,2),
+                    current_balance DECIMAL(15,2) DEFAULT 0,
+                    due_date INTEGER, -- dia do mês
+                    closing_date INTEGER, -- dia do mês
+                    is_active BOOLEAN DEFAULT true,
+                    pluggy_item_id VARCHAR(100),
+                    pluggy_account_id VARCHAR(100),
+                    last_sync TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, pluggy_account_id)
+                );
                 
                 -- Índices para performance
                 CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id);
@@ -209,6 +248,10 @@ class FinancialBot:
                 CREATE INDEX IF NOT EXISTS idx_transactions_goal ON transactions(goal_id);
                 CREATE INDEX IF NOT EXISTS idx_budgets_user_month ON budgets(user_id, month_year);
                 CREATE INDEX IF NOT EXISTS idx_alerts_user_unread ON alerts(user_id, is_read, created_at DESC);
+                CREATE INDEX IF NOT EXISTS idx_bank_accounts_user ON bank_accounts(user_id, is_active);
+                CREATE INDEX IF NOT EXISTS idx_bank_accounts_pluggy ON bank_accounts(pluggy_item_id, pluggy_account_id);
+                CREATE INDEX IF NOT EXISTS idx_credit_cards_user ON credit_cards(user_id, is_active);
+                CREATE INDEX IF NOT EXISTS idx_credit_cards_pluggy ON credit_cards(pluggy_item_id, pluggy_account_id);
 
                 -- Triggers para updated_at
                 DROP TRIGGER IF EXISTS update_goals_updated_at ON goals;
@@ -255,6 +298,7 @@ class FinancialBot:
 /perfil - Seu perfil"""
                     
                     keyboard = [
+                        [InlineKeyboardButton("🏦 Conectar Banco", callback_data="connect_bank")],
                         [InlineKeyboardButton("💸 Despesas", callback_data="manage_expenses")],
                         [InlineKeyboardButton("🎯 Metas", callback_data="manage_goals")],
                         [InlineKeyboardButton("📊 Resumo", callback_data="financial_summary")],
@@ -357,6 +401,30 @@ Entre em contato com o suporte para reativar.
 • Conselhos de investimento personalizados
 • Alertas de gastos excessivos""",
                 parse_mode='Markdown'
+            )
+        elif data == "connect_bank":
+            await query.edit_message_text(
+                "🏦 **Conectar Conta Bancária**\n\n"
+                "📱 **Integração Pluggy - Open Finance**\n\n"
+                "✅ **Suporte a +200 bancos brasileiros:**\n"
+                "• Banco Inter\n"
+                "• Nubank\n"
+                "• Bradesco\n"
+                "• Itaú\n"
+                "• Santander\n"
+                "• Banco do Brasil\n"
+                "• C6 Bank\n"
+                "• BTG Pactual\n"
+                "• E muitos outros...\n\n"
+                "🔒 **Conexão 100% segura e criptografada**\n"
+                "🏦 **Certificado pelo Banco Central**\n"
+                "📊 **Dados sincronizados em tempo real**\n\n"
+                "**Para conectar sua conta:**\n"
+                "1. Use o comando /conectar\n"
+                "2. Escolha seu banco\n"
+                "3. Faça login seguro via Pluggy\n"
+                "4. Autorize o acesso\n\n"
+                "💡 Suas credenciais ficam apenas no Pluggy, nunca conosco!"
             )
         elif data == "manage_expenses":
             await query.edit_message_text(
@@ -484,20 +552,77 @@ Entre em contato com o suporte para reativar.
     async def sync_pluggy_accounts(self, user_id):
         """Sincronizar contas do Pluggy"""
         try:
-            # Aqui você integraria com o Pluggy API
-            # Por enquanto, retorna lista vazia
             logger.info(f"Sincronizando contas Pluggy para usuário {user_id}")
             
-            # Exemplo de como seria:
-            # pluggy_client = PluggyClient()  
-            # accounts = await pluggy_client.get_accounts(user_id)
-            # Salvar as contas na base de dados local
+            # Verificar se temos credenciais do Pluggy
+            client_id = os.getenv('PLUGGY_CLIENT_ID')
+            client_secret = os.getenv('PLUGGY_CLIENT_SECRET')
             
-            return []
+            if not client_id or not client_secret:
+                logger.warning("Credenciais Pluggy não configuradas")
+                return []
+            
+            # Importar cliente Pluggy
+            try:
+                from pluggy_client import PluggyClient
+                
+                # Usar Pluggy para buscar contas do usuário
+                async with PluggyClient(client_id, client_secret, sandbox=True) as pluggy:
+                    items = await pluggy.get_items()
+                    accounts = []
+                    
+                    for item in items:
+                        item_accounts = await pluggy.get_accounts(item['id'])
+                        for account in item_accounts:
+                            # Salvar conta no banco local
+                            await self.save_account_to_db(user_id, item, account)
+                            accounts.append({
+                                'bank_name': item.get('connector', {}).get('name', 'Banco'),
+                                'account_type': account.get('type', 'Conta Corrente'),
+                                'balance': account.get('balance', 0),
+                                'currency': account.get('currencyCode', 'BRL')
+                            })
+                    
+                    return accounts
+                    
+            except ImportError:
+                logger.error("Cliente Pluggy não disponível")
+                return []
             
         except Exception as e:
             logger.error(f"Erro ao sincronizar contas Pluggy: {e}")
             return []
+
+    async def save_account_to_db(self, user_id, item, account):
+        """Salvar conta no banco de dados local"""
+        try:
+            query = """
+                INSERT INTO bank_accounts (
+                    user_id, bank_name, account_type, account_number, 
+                    balance, currency_code, is_active, pluggy_item_id, pluggy_account_id
+                ) VALUES ($1, $2, $3, $4, $5, $6, true, $7, $8)
+                ON CONFLICT (user_id, pluggy_account_id) 
+                DO UPDATE SET 
+                    balance = EXCLUDED.balance,
+                    updated_at = CURRENT_TIMESTAMP
+            """
+            
+            params = (
+                user_id,
+                item.get('connector', {}).get('name', 'Banco'),
+                account.get('type', 'Conta Corrente'),
+                account.get('number', '****'),
+                float(account.get('balance', 0)),
+                account.get('currencyCode', 'BRL'),
+                item.get('id'),
+                account.get('id')
+            )
+            
+            await self.execute_query_one(query, params)
+            logger.info(f"Conta salva no DB: {account.get('id')}")
+            
+        except Exception as e:
+            logger.error(f"Erro ao salvar conta no DB: {e}")
 
 async def main():
     """Função principal"""

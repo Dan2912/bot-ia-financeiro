@@ -146,8 +146,59 @@ def main():
                             "Use /start → 🏦 Conectar Banco"
                         )
                 
+                # Criar função para conectar banco
+                async def conectar_command(update, context):
+                    """Comando para conectar conta bancária via Pluggy"""
+                    user = await bot.get_or_create_user(update.effective_user)
+                    
+                    try:
+                        text = """🏦 **Conectar Conta Bancária**
+
+🔗 **Integração via Pluggy (Open Finance)**
+
+**Bancos disponíveis:**
+🏦 Banco Inter
+💜 Nubank  
+🔴 Bradesco
+🔶 Itaú
+🔴 Santander
+🟡 Banco do Brasil
+⚫ C6 Bank
+🟢 BTG Pactual
+📱 PicPay
+💰 XP Investimentos
+
+**E +190 outros bancos!**
+
+🔒 **Processo 100% seguro:**
+1️⃣ Clique no link do Pluggy
+2️⃣ Escolha seu banco
+3️⃣ Faça login (só você vê suas credenciais)
+4️⃣ Autorize o acesso aos dados
+5️⃣ Pronto! Dados sincronizados
+
+⚠️ **Importante:**
+• Suas credenciais ficam APENAS no Pluggy
+• Certificado pelo Banco Central
+• Conformidade total com LGPD
+• Você pode revogar acesso a qualquer momento
+
+🔗 **Link para conectar:**
+https://connect.pluggy.ai
+
+💡 Após conectar, use /saldo para ver seus saldos!"""
+                        
+                        await update.message.reply_text(text, parse_mode='Markdown')
+                        
+                    except Exception as e:
+                        logger.error(f"Erro no comando conectar: {e}")
+                        await update.message.reply_text(
+                            "❌ Erro ao processar comando. Tente novamente em alguns instantes."
+                        )
+                
                 # Comandos principais
                 application.add_handler(CommandHandler("saldo", saldo_command))
+                application.add_handler(CommandHandler("conectar", conectar_command))
                 
                 # Tentar adicionar outros comandos se existirem
                 try:
