@@ -419,25 +419,7 @@ go run cmd/bot/main.go
 - Health check em `/health`
 - Monitoramento de uptime
 - Alertas de erro automáticos
-
-## 🤝 Contribuição
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature
-3. Commit suas mudanças
-4. Faça push para a branch
-5. Abra um Pull Request
-
-## 📞 Suporte
-
-- **GitHub Issues:** [Reportar bugs](https://github.com/Danillo2912/go_control/issues)
-- **Telegram:** @Danillo2912
-- **Email:** danillo2912@gmail.com
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
-
+- 
 ## 🎯 Roadmap
 
 ### Próximas Funcionalidades
