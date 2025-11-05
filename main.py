@@ -673,6 +673,163 @@ Entre em contato com o suporte para reativar.
             logger.warning(f"Erro geral ao gerar connect URL: {e}")
             return None
 
+    async def create_demo_accounts(self, user_id):
+        """Criar contas e dados de demonstração para o usuário"""
+        try:
+            # Limpar dados demo existentes
+            await self.clear_demo_data(user_id)
+            
+            # Inserir contas bancárias de exemplo
+            demo_accounts = [
+                ('Nubank', 'Conta Corrente', '****1234', 2450.00, 'BRL', 'demo_nubank', 'demo_acc_1'),
+                ('Banco Inter', 'Conta Corrente', '****5678', 1800.00, 'BRL', 'demo_inter', 'demo_acc_2'),
+                ('Itaú', 'Conta Poupança', '****9012', 5200.00, 'BRL', 'demo_itau', 'demo_acc_3')
+            ]
+            
+            for account_data in demo_accounts:
+                query = """
+                    INSERT INTO bank_accounts (
+                        user_id, bank_name, account_type, account_number, 
+                        balance, currency_code, is_active, pluggy_item_id, 
+                        pluggy_account_id, last_sync
+                    ) VALUES ($1, $2, $3, $4, $5, $6, true, $7, $8, CURRENT_TIMESTAMP)
+                """
+                await self.execute_query_one(query, (user_id,) + account_data)
+            
+            # Inserir cartões de exemplo
+            demo_cards = [
+                ('Nubank', 'Nubank Mastercard', '1234', 3000.00, 2850.00, 150.00, 15, 8, 'demo_nu_card'),
+                ('Banco Inter', 'Inter Gold Visa', '5678', 5000.00, 4200.00, 800.00, 10, 3, 'demo_inter_card')
+            ]
+            
+            for card_data in demo_cards:
+                query = """
+                    INSERT INTO credit_cards (
+                        user_id, bank_name, card_name, card_number_last4,
+                        credit_limit, available_limit, current_balance,
+                        due_date, closing_date, is_active, pluggy_account_id,
+                        last_sync
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, $10, CURRENT_TIMESTAMP)
+                """
+                await self.execute_query_one(query, (user_id,) + card_data)
+            
+            # Criar categorias de exemplo
+            await self.create_demo_categories(user_id)
+            
+            # Criar meta de exemplo
+            await self.create_demo_goal(user_id)
+            
+            # Criar transações de exemplo
+            await self.create_demo_transactions(user_id)
+            
+            logger.info(f"Dados demo criados para usuário {user_id}")
+            
+        except Exception as e:
+            logger.error(f"Erro ao criar dados demo: {e}")
+            raise
+
+    async def clear_demo_data(self, user_id):
+        """Limpar dados demo existentes"""
+        try:
+            # Limpar apenas dados marcados como demo
+            queries = [
+                "DELETE FROM bank_accounts WHERE user_id = $1 AND pluggy_item_id LIKE 'demo_%'",
+                "DELETE FROM credit_cards WHERE user_id = $1 AND pluggy_account_id LIKE 'demo_%'",
+                "DELETE FROM transactions WHERE user_id = $1 AND notes LIKE '%DEMO%'",
+                "DELETE FROM goals WHERE user_id = $1 AND title LIKE '%Demo%'"
+            ]
+            
+            for query in queries:
+                await self.execute_query_one(query, (user_id,))
+                
+        except Exception as e:
+            logger.warning(f"Erro ao limpar dados demo: {e}")
+
+    async def create_demo_categories(self, user_id):
+        """Criar categorias de exemplo"""
+        try:
+            categories = [
+                ('Alimentação', 'expense', '🍽️'),
+                ('Transporte', 'expense', '🚗'),
+                ('Lazer', 'expense', '🎮'),
+                ('Salário', 'income', '💰'),
+                ('Freelance', 'income', '💻')
+            ]
+            
+            for name, type_, icon in categories:
+                query = """
+                    INSERT INTO categories (user_id, name, type, icon, is_active)
+                    VALUES ($1, $2, $3, $4, true)
+                    ON CONFLICT (user_id, name) DO NOTHING
+                """
+                await self.execute_query_one(query, (user_id, name, type_, icon))
+                
+        except Exception as e:
+            logger.warning(f"Erro ao criar categorias demo: {e}")
+
+    async def create_demo_goal(self, user_id):
+        """Criar meta de exemplo"""
+        try:
+            query = """
+                INSERT INTO goals (
+                    user_id, title, description, goal_type, target_amount,
+                    current_amount, target_date, priority, is_active
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
+            """
+            
+            goal_data = (
+                user_id,
+                'Reserva de Emergência - Demo',
+                'Meta de exemplo: construir reserva de emergência equivalente a 6 meses de gastos',
+                'emergency_fund',
+                10000.00,
+                3200.00,
+                '2025-12-31',
+                1
+            )
+            
+            await self.execute_query_one(query, goal_data)
+            
+        except Exception as e:
+            logger.warning(f"Erro ao criar meta demo: {e}")
+
+    async def create_demo_transactions(self, user_id):
+        """Criar transações de exemplo"""
+        try:
+            # Buscar IDs das categorias
+            alimentacao = await self.execute_query_one(
+                "SELECT id FROM categories WHERE user_id = $1 AND name = 'Alimentação'", 
+                (user_id,)
+            )
+            transporte = await self.execute_query_one(
+                "SELECT id FROM categories WHERE user_id = $1 AND name = 'Transporte'", 
+                (user_id,)
+            )
+            salario = await self.execute_query_one(
+                "SELECT id FROM categories WHERE user_id = $1 AND name = 'Salário'", 
+                (user_id,)
+            )
+            
+            transactions = [
+                ('Supermercado', 'Compras semanais', 125.50, 'expense', alimentacao['id'] if alimentacao else None, '2025-11-03'),
+                ('Uber', 'Corrida para trabalho', 25.00, 'expense', transporte['id'] if transporte else None, '2025-11-02'),
+                ('Salário Novembro', 'Pagamento mensal', 4500.00, 'income', salario['id'] if salario else None, '2025-11-01'),
+                ('Restaurante', 'Almoço executivo', 45.00, 'expense', alimentacao['id'] if alimentacao else None, '2025-10-30'),
+                ('Combustível', 'Abastecimento', 180.00, 'expense', transporte['id'] if transporte else None, '2025-10-28')
+            ]
+            
+            for title, desc, amount, type_, cat_id, date in transactions:
+                query = """
+                    INSERT INTO transactions (
+                        user_id, title, description, amount, type, category_id,
+                        transaction_date, status, notes
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'paid', 'DEMO - Dados de exemplo')
+                """
+                await self.execute_query_one(query, (user_id, title, desc, amount, type_, cat_id, date))
+                
+        except Exception as e:
+            logger.warning(f"Erro ao criar transações demo: {e}")
+
 async def main():
     """Função principal"""
     # Iniciar servidor de health check em thread separada APENAS se não estiver em loop asyncio

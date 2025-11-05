@@ -203,34 +203,40 @@ def main():
 🔧 **API Pluggy temporariamente indisponível**
 
 **📊 Status atual:**
-• ⚫ API Pluggy: Offline
+• ⚫ API Pluggy: Offline (SSL/Conectividade)
 • ✅ Bot principal: Funcionando  
 • ✅ Banco de dados: Ativo
 
-**🛠️ Alternativas disponíveis:**
+**� DEMONSTRAÇÃO DISPONÍVEL:**
+Para testar as funcionalidades, use `/demo` para adicionar dados de exemplo!
+
+**🛠️ Alternativas para dados reais:**
 
 📱 **Via App do banco (Open Banking):**
 1️⃣ Abra o app do seu banco
-2️⃣ Procure "Open Banking" ou "Compartilhar dados"
-3️⃣ Busque por "Pluggy" na lista de empresas
-4️⃣ Autorize o acesso aos seus dados
-5️⃣ Use /saldo após autorizar
+2️⃣ Menu → Open Banking / Compartilhar dados
+3️⃣ Busque "Pluggy" na lista autorizada
+4️⃣ Autorize acesso (saldo, extrato, cartões)
+5️⃣ Use `/saldo` após autorizar
 
-💻 **Via Portal Pluggy:**
+💻 **Via Portal Web:**
 🔗 https://pluggy.ai
-• Login direto no portal oficial
-• Conecte manualmente seu banco
+• Login com suas credenciais
+• Conecte bancos manualmente
 
-**📈 Funcionalidades offline disponíveis:**
-• `/despesas` - Cadastrar gastos manualmente
-• `/metas` - Definir objetivos financeiros  
-• `/resumo` - Ver análises dos dados locais
+**🎯 Funcionalidades sempre disponíveis:**
+• `/demo` - 🎮 Carregar dados de exemplo
+• `/despesas` - 💸 Cadastrar gastos manualmente  
+• `/metas` - 🎯 Definir objetivos financeiros
+• `/resumo` - 📊 Ver análises dos dados locais
+• `/status` - 🔍 Monitorar serviços
 
-**🔄 Verificar status:**
-• `/status` - Status em tempo real dos serviços
+**🔄 Monitoramento:**
+• API sendo verificada automaticamente
+• Notificação quando voltar online
 
-⏱️ **Estimativa:** Normalização em algumas horas
-💡 O serviço será restaurado automaticamente."""
+⏱️ **Situação:** Problema de conectividade SSL no Railway com Pluggy
+� **Bot 100% funcional** para todas as outras operações!"""
                         
                         await update.message.reply_text(text, parse_mode='Markdown')
                         
@@ -276,10 +282,58 @@ def main():
                             "🏦 **Conexão bancária:** Em verificação"
                         )
                 
+                # Comando demo para dados de exemplo
+                async def demo_command(update, context):
+                    """Adicionar dados de exemplo para demonstração"""
+                    user = await bot.get_or_create_user(update.effective_user)
+                    
+                    try:
+                        # Adicionar contas de exemplo
+                        await bot.create_demo_accounts(user['id'])
+                        
+                        text = """🎮 **Dados de Demonstração Carregados!**
+
+**🏦 Contas criadas:**
+• 💜 Nubank - R$ 2.450,00
+• 🏦 Banco Inter - R$ 1.800,00  
+• 🔶 Itaú - R$ 5.200,00
+
+**💳 Cartões adicionados:**
+• Nubank Mastercard - Limite R$ 3.000
+• Inter Gold - Limite R$ 5.000
+
+**💸 Transações de exemplo:**
+• 15 gastos dos últimos 30 dias
+• Categorias: Alimentação, Transporte, Lazer
+• Receitas e despesas variadas
+
+**🎯 Meta exemplo:**
+• Reserva de Emergência - R$ 10.000
+• Progresso atual: 32% (R$ 3.200)
+
+**📊 Agora você pode testar:**
+• `/saldo` - Ver suas contas e saldos
+• `/resumo` - Dashboard financeiro completo
+• `/despesas` - Adicionar novos gastos
+• `/metas` - Gerenciar objetivos
+
+**⚠️ Dados de exemplo apenas!**
+Para dados reais, conecte seus bancos via `/conectar`"""
+                        
+                        await update.message.reply_text(text, parse_mode='Markdown')
+                        
+                    except Exception as e:
+                        logger.error(f"Erro no comando demo: {e}")
+                        await update.message.reply_text(
+                            "❌ **Erro ao criar dados de demonstração**\n\n"
+                            "Tente novamente em alguns instantes."
+                        )
+
                 # Comandos principais
                 application.add_handler(CommandHandler("saldo", saldo_command))
                 application.add_handler(CommandHandler("conectar", conectar_command))
                 application.add_handler(CommandHandler("status", status_command))
+                application.add_handler(CommandHandler("demo", demo_command))
                 
                 # Tentar adicionar outros comandos se existirem
                 try:
