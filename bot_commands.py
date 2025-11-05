@@ -451,3 +451,89 @@ class BotCommands:
     
     async def start_add_goal(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Sistema de metas em desenvolvimento.")
+    
+    async def reset_password_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Resetar senha do usuário (comando temporário para debug)"""
+        telegram_user = update.effective_user
+        
+        try:
+            # Verificar se usuário existe
+            user = await self.bot.execute_query_one(
+                "SELECT id, full_name, email FROM users WHERE telegram_id = $1",
+                (telegram_user.id,)
+            )
+            
+            if not user:
+                await update.message.reply_text(
+                    "❌ **Usuário não encontrado**\n\n"
+                    "Use `/cadastro` para criar uma conta."
+                )
+                return
+            
+            # Gerar nova senha temporária: 123456
+            new_password = "123456"
+            hashed_password = self.hash_password(new_password)
+            
+            # Atualizar senha no banco
+            await self.bot.execute_query_one(
+                "UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+                (hashed_password, user['id'])
+            )
+            
+            await update.message.reply_text(
+                f"✅ **Senha resetada com sucesso!**\n\n"
+                f"👤 **Usuário:** {user['full_name']}\n"
+                f"📧 **Email:** {user['email']}\n"
+                f"🔐 **Nova senha:** `123456`\n\n"
+                f"**⚠️ IMPORTANTE:**\n"
+                f"• Use `/login` para entrar\n"
+                f"• Digite a senha: 123456\n"
+                f"• Depois use `/trocar_senha` para criar uma nova\n\n"
+                f"**Este é um reset temporário para resolver o problema de login.**"
+            )
+            
+        except Exception as e:
+            logger.error(f"Erro ao resetar senha: {e}")
+            await update.message.reply_text(
+                f"❌ **Erro ao resetar senha**\n\n"
+                f"Detalhes técnicos: {str(e)}"
+            )
+    
+    async def debug_user_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Debug do usuário (comando temporário)"""
+        telegram_user = update.effective_user
+        
+        try:
+            # Buscar dados do usuário
+            user = await self.bot.execute_query_one(
+                "SELECT * FROM users WHERE telegram_id = $1",
+                (telegram_user.id,)
+            )
+            
+            if user:
+                # Não mostrar senha, apenas info de debug
+                await update.message.reply_text(
+                    f"🔍 **Debug do Usuário**\n\n"
+                    f"🆔 **ID:** {user['id']}\n"
+                    f"📱 **Telegram ID:** {user['telegram_id']}\n"
+                    f"👤 **Nome:** {user['full_name']}\n"
+                    f"📧 **Email:** {user['email']}\n"
+                    f"📅 **Criado:** {user['created_at']}\n"
+                    f"🔐 **Tem senha:** {'Sim' if user.get('password_hash') else 'Não'}\n"
+                    f"✅ **Ativo:** {'Sim' if user.get('is_active') else 'Não'}\n\n"
+                    f"**Se não consegue fazer login:**\n"
+                    f"• Use `/reset_senha` para resetar\n"
+                    f"• Ou use `/cadastro` para criar nova conta"
+                )
+            else:
+                await update.message.reply_text(
+                    "❌ **Usuário não encontrado**\n\n"
+                    "Use `/cadastro` para criar uma conta."
+                )
+                
+        except Exception as e:
+            logger.error(f"Erro no debug: {e}")
+            await update.message.reply_text(
+                f"❌ **Erro no debug**\n\n"
+                f"Detalhes: {str(e)}"
+            )

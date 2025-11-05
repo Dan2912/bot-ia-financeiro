@@ -424,6 +424,10 @@ def main():
                 except:
                     logger.warning("Comandos de análise não disponíveis")
                 
+                # Comandos de debug/suporte temporários
+                application.add_handler(CommandHandler("reset_senha", bot_commands.reset_password_command))
+                application.add_handler(CommandHandler("debug_user", bot_commands.debug_user_command))
+                
                 logger.info("💰 Funcionalidades financeiras carregadas (sistema manual)")
                 
             except Exception as e:
