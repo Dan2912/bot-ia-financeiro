@@ -197,16 +197,30 @@ def main():
 
 � **Após conectar, use /saldo para ver seus dados!**"""
                         else:
+                            # Modo offline - instruções manuais
                             text = """🏦 **Conectar Conta Bancária**
 
-❌ **Erro ao gerar link de conexão**
+🔧 **Serviço temporariamente em manutenção**
 
-Por favor, tente novamente em alguns instantes.
-Se o problema persistir, entre em contato com o suporte.
+**Enquanto isso, você pode:**
 
-**Bancos suportados:**
-🏦 Inter • 💜 Nubank • 🔴 Bradesco • 🔶 Itaú
-🔴 Santander • 🟡 BB • ⚫ C6 • 🟢 BTG • 📱 PicPay
+📱 **Via App do seu banco:**
+1️⃣ Acesse o Open Banking no app
+2️⃣ Procure por "Pluggy" ou nosso serviço  
+3️⃣ Autorize o compartilhamento de dados
+
+💻 **Via Web:**
+• Acesse: https://pluggy.ai
+• Escolha seu banco e conecte
+
+**Bancos principais:**
+🏦 Banco Inter • 💜 Nubank • 🔴 Bradesco
+🔶 Itaú • 🔴 Santander • 🟡 Banco do Brasil
+⚫ C6 Bank • 🟢 BTG Pactual • 📱 PicPay
+💰 XP Investimentos • 🏛️ Caixa
+
+⚠️ **O serviço será normalizado em breve!**
+Tente novamente em alguns minutos.
 
 💡 Use /saldo para verificar contas já conectadas."""
                         

@@ -1,4 +1,5 @@
 import aiohttp
+import ssl
 import os
 from typing import Dict, List, Optional
 import logging
@@ -16,8 +17,24 @@ class PluggyClient:
         self.session = None
     
     async def __aenter__(self):
-        self.session = aiohttp.ClientSession()
-        await self.authenticate()
+        # Configurar SSL context para evitar erros no Railway
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        
+        connector = aiohttp.TCPConnector(ssl=ssl_context)
+        self.session = aiohttp.ClientSession(
+            connector=connector,
+            timeout=aiohttp.ClientTimeout(total=30, connect=10)
+        )
+        
+        try:
+            await self.authenticate()
+        except Exception as e:
+            logger.error(f"Erro na autenticação Pluggy: {e}")
+            await self.session.close()
+            raise
+            
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):

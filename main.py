@@ -552,14 +552,14 @@ Entre em contato com o suporte para reativar.
     async def sync_pluggy_accounts(self, user_id):
         """Sincronizar contas do Pluggy"""
         try:
-            logger.info(f"Sincronizando contas Pluggy para usuário {user_id}")
+            logger.info(f"Tentativa de sincronização Pluggy para usuário {user_id}")
             
             # Verificar se temos credenciais do Pluggy
             client_id = os.getenv('PLUGGY_CLIENT_ID')
             client_secret = os.getenv('PLUGGY_CLIENT_SECRET')
             
             if not client_id or not client_secret:
-                logger.warning("Credenciais Pluggy não configuradas")
+                logger.warning("Credenciais Pluggy não configuradas - modo local")
                 return []
             
             # Importar cliente Pluggy
@@ -567,31 +567,41 @@ Entre em contato com o suporte para reativar.
                 from pluggy_client import PluggyClient
                 
                 # Usar Pluggy para buscar contas do usuário
-                async with PluggyClient(client_id, client_secret, sandbox=True) as pluggy:
-                    # Usar user_id como clientUserId
-                    items = await pluggy.get_items(str(user_id))
-                    accounts = []
-                    
-                    for item in items:
-                        item_accounts = await pluggy.get_accounts(item['id'])
-                        for account in item_accounts:
-                            # Salvar conta no banco local
-                            await self.save_account_to_db(user_id, item, account)
-                            accounts.append({
-                                'bank_name': item.get('connector', {}).get('name', 'Banco'),
-                                'account_type': account.get('type', 'Conta Corrente'),
-                                'balance': account.get('balance', 0),
-                                'currency': account.get('currencyCode', 'BRL')
-                            })
-                    
-                    return accounts
+                try:
+                    async with PluggyClient(client_id, client_secret, sandbox=True) as pluggy:
+                        # Usar user_id como clientUserId
+                        items = await pluggy.get_items(str(user_id))
+                        accounts = []
+                        
+                        for item in items:
+                            try:
+                                item_accounts = await pluggy.get_accounts(item['id'])
+                                for account in item_accounts:
+                                    # Salvar conta no banco local
+                                    await self.save_account_to_db(user_id, item, account)
+                                    accounts.append({
+                                        'bank_name': item.get('connector', {}).get('name', 'Banco'),
+                                        'account_type': account.get('type', 'Conta Corrente'),
+                                        'balance': account.get('balance', 0),
+                                        'currency': account.get('currencyCode', 'BRL')
+                                    })
+                            except Exception as account_error:
+                                logger.warning(f"Erro ao processar item {item.get('id')}: {account_error}")
+                                continue
+                        
+                        logger.info(f"Sincronizadas {len(accounts)} contas para usuário {user_id}")
+                        return accounts
+                        
+                except Exception as pluggy_error:
+                    logger.warning(f"API Pluggy indisponível: {pluggy_error}")
+                    return []
                     
             except ImportError:
-                logger.error("Cliente Pluggy não disponível")
+                logger.warning("Cliente Pluggy não disponível no sistema")
                 return []
             
         except Exception as e:
-            logger.error(f"Erro ao sincronizar contas Pluggy: {e}")
+            logger.warning(f"Erro geral na sincronização Pluggy: {e}")
             return []
 
     async def save_account_to_db(self, user_id, item, account):
@@ -632,31 +642,36 @@ Entre em contato com o suporte para reativar.
             client_secret = os.getenv('PLUGGY_CLIENT_SECRET')
             
             if not client_id or not client_secret:
-                logger.error("Credenciais Pluggy não configuradas")
+                logger.warning("Credenciais Pluggy não configuradas - modo offline")
                 return None
             
             # Importar e usar cliente Pluggy
             from pluggy_client import PluggyClient
             
-            async with PluggyClient(client_id, client_secret, sandbox=True) as pluggy:
-                # Criar connect token genérico (sem connector específico)
-                connect_data = await pluggy.create_connect_token_generic(str(user_id))
-                
-                if connect_data and 'accessToken' in connect_data:
-                    # URL do Pluggy Connect com token
-                    base_url = "https://connect.sandbox.pluggy.ai" # Sandbox
-                    # base_url = "https://connect.pluggy.ai" # Produção
+            try:
+                async with PluggyClient(client_id, client_secret, sandbox=True) as pluggy:
+                    # Criar connect token genérico (sem connector específico)
+                    connect_data = await pluggy.create_connect_token_generic(str(user_id))
                     
-                    connect_url = f"{base_url}?connectToken={connect_data['accessToken']}"
-                    
-                    logger.info(f"Connect URL gerada para usuário {user_id}")
-                    return connect_url
-                else:
-                    logger.error("Falha ao gerar connect token")
-                    return None
+                    if connect_data and 'accessToken' in connect_data:
+                        # URL do Pluggy Connect com token
+                        base_url = "https://connect.sandbox.pluggy.ai" # Sandbox
+                        # base_url = "https://connect.pluggy.ai" # Produção
+                        
+                        connect_url = f"{base_url}?connectToken={connect_data['accessToken']}"
+                        
+                        logger.info(f"Connect URL gerada para usuário {user_id}")
+                        return connect_url
+                    else:
+                        logger.warning("Falha ao gerar connect token - resposta inválida")
+                        return None
+                        
+            except Exception as pluggy_error:
+                logger.warning(f"Pluggy API indisponível: {pluggy_error}")
+                return None
                     
         except Exception as e:
-            logger.error(f"Erro ao gerar connect URL: {e}")
+            logger.warning(f"Erro geral ao gerar connect URL: {e}")
             return None
 
 async def main():
