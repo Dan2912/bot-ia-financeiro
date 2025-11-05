@@ -1,21 +1,4 @@
 # Railway.app deployment configuration
 
-# Build command
-build = "pip install -r requirements.txt"
-
-# Start command  
-start = "python main.py"
-
-# Environment variables required
-[environment]
-PYTHON_VERSION = "3.11"
-
-# Health check endpoint configuration
-[health_check]
-path = "/health"
-interval_seconds = 30
-timeout_seconds = 10
-
-# HTTP service configuration
-[http]
-port = 8080
+[deploy]
+startCommand = "python main.py"
