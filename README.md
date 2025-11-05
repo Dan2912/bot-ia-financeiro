@@ -112,7 +112,7 @@ bot-ia-financeiro/
 
 ### **1. Clonar o Repositório**
 ```bash
-git clone https://github.com/seu-usuario/bot-ia-financeiro.git
+git clone https://github.com/Danillo2912/bot-ia-financeiro.git
 cd bot-ia-financeiro
 ```
 
@@ -243,12 +243,12 @@ Bot: 🎉 Meta criada com sucesso!
 ## 📞 **Suporte e Contribuição**
 
 ### **🐛 Reportar Bugs**
-- Abra uma [Issue](https://github.com/seu-usuario/bot-ia-financeiro/issues)
+- Abra uma [Issue](https://github.com/Danillo2912/bot-ia-financeiro/issues)
 - Descreva o problema detalhadamente
 - Inclua prints se possível
 
 ### **💡 Sugestões**
-- Use [Discussions](https://github.com/seu-usuario/bot-ia-financeiro/discussions)
+- Use [Discussions](https://github.com/Danillo2912/bot-ia-financeiro/discussions)
 - Compartilhe ideias de melhorias
 - Vote nas sugestões da comunidade
 
