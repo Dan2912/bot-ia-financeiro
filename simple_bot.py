@@ -444,21 +444,24 @@ def main():
                 # Comando para debugar handlers registrados
                 async def debug_handlers_command(update, context):
                     """Debug dos handlers registrados"""
-                    handlers_info = []
-                    for group_id, group_handlers in application.handlers.items():
-                        handlers_info.append(f"**Grupo {group_id}:** {len(group_handlers)} handlers")
-                        for handler in group_handlers[:5]:  # Mostrar apenas os primeiros 5
-                            if hasattr(handler, 'command') and handler.command:
-                                handlers_info.append(f"  - Comando: /{handler.command[0]}")
-                            elif hasattr(handler, 'callback') and handler.callback:
-                                handlers_info.append(f"  - Handler: {handler.callback.__name__}")
-                    
-                    await update.message.reply_text(
-                        f"🔧 **Handlers Registrados:**\n\n" + 
-                        "\n".join(handlers_info[:15]) +  # Limitar a 15 linhas
-                        "\n\n💡 Total de grupos: " + str(len(application.handlers)),
-                        parse_mode='Markdown'
-                    )
+                    try:
+                        total_handlers = 0
+                        grupos = []
+                        
+                        for group_id, group_handlers in application.handlers.items():
+                            total_handlers += len(group_handlers)
+                            grupos.append(f"Grupo {group_id}: {len(group_handlers)} handlers")
+                        
+                        message = "🔧 HANDLERS REGISTRADOS:\n\n"
+                        message += "\n".join(grupos[:10])  # Máximo 10 grupos
+                        message += f"\n\nTotal de handlers: {total_handlers}"
+                        message += f"\nTotal de grupos: {len(application.handlers)}"
+                        
+                        await update.message.reply_text(message)
+                        
+                    except Exception as e:
+                        await update.message.reply_text(f"❌ Erro no debug: {str(e)}")
+                
                 
                 # Registrar comandos de debug
                 application.add_handler(CommandHandler("debug_receitas", debug_receitas_command))
@@ -523,9 +526,32 @@ def main():
                         "**Em breve:** Interface guiada completa!"
                     )
                 
+                # Comando de status simples
+                async def status_simples_command(update, context):
+                    """Status do bot"""
+                    import datetime
+                    
+                    now = datetime.datetime.now()
+                    
+                    await update.message.reply_text(
+                        f"🤖 BOT STATUS:\n\n"
+                        f"✅ Online e funcionando\n"
+                        f"🕒 Horário: {now.strftime('%H:%M:%S')}\n"
+                        f"📅 Data: {now.strftime('%d/%m/%Y')}\n"
+                        f"🗄️ Banco: PostgreSQL Railway\n"
+                        f"🔧 Sistema: Manual (sem APIs)\n\n"
+                        f"COMANDOS FUNCIONAIS:\n"
+                        f"• /receitas - Sistema de receitas\n"
+                        f"• /gastos - Sistema de despesas\n"
+                        f"• /entrar - Login automático\n"
+                        f"• /saldo - Ver contas\n"
+                        f"• /start - Menu principal"
+                    )
+                
                 # Registrar comandos simples
                 application.add_handler(CommandHandler("receitas", receitas_simples_command))
                 application.add_handler(CommandHandler("gastos", gastos_simples_command))
+                application.add_handler(CommandHandler("status", status_simples_command))
                 
                 logger.info("💰 Funcionalidades financeiras carregadas (sistema manual)")
                 
@@ -576,12 +602,32 @@ def main():
         from telegram.ext import MessageHandler, filters
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, fallback_handler), group=100)
         
-        logger.info("🚀 Bot configurado com handlers de fallback. Iniciando polling...")
+        # Adicionar handler de erro global
+        async def error_handler(update, context):
+            """Handler global de erros"""
+            logger.error(f"❌ Erro no bot: {context.error}")
+            
+            if update and update.effective_message:
+                try:
+                    await update.effective_message.reply_text(
+                        "❌ **Erro interno do bot**\n\n"
+                        "Tente novamente em alguns segundos.\n"
+                        "Se o problema persistir, use `/start` para reiniciar."
+                    )
+                except:
+                    pass  # Se não conseguir responder, ignorar
         
-        # Executar bot
+        # Registrar handler de erro
+        application.add_error_handler(error_handler)
+        
+        logger.info("🚀 Bot configurado com handlers de fallback e tratamento de erros. Iniciando polling...")
+        
+        # Executar bot com configurações otimizadas
         application.run_polling(
             allowed_updates=['message', 'callback_query'],
-            drop_pending_updates=True
+            drop_pending_updates=True,
+            timeout=30,
+            bootstrap_retries=3
         )
         
     except Exception as e:
