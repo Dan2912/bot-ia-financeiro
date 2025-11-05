@@ -399,6 +399,106 @@ Entre em contato com o suporte para reativar.
                 "❌ Opção não reconhecida. Use /start para voltar ao menu principal."
             )
 
+    async def get_or_create_user(self, telegram_user):
+        """Obter ou criar usuário"""
+        try:
+            # Verificar se o usuário já existe
+            existing_user = await self.get_user_by_telegram_id(telegram_user.id)
+            if existing_user:
+                return existing_user
+            
+            # Criar novo usuário
+            user_data = (
+                telegram_user.id,
+                telegram_user.username or telegram_user.first_name,
+                telegram_user.first_name or "Usuário"
+            )
+            
+            query = """
+                INSERT INTO users (telegram_id, username, full_name) 
+                VALUES ($1, $2, $3) 
+                RETURNING id, telegram_id, username, full_name, created_at
+            """
+            
+            user = await self.execute_query_one(query, user_data)
+            logger.info(f"Novo usuário criado: {user['full_name']} (ID: {user['telegram_id']})")
+            return user
+            
+        except Exception as e:
+            logger.error(f"Erro ao criar/obter usuário: {e}")
+            raise
+
+    async def get_user_by_telegram_id(self, telegram_id):
+        """Buscar usuário por ID do Telegram"""
+        try:
+            async with self.db_pool.acquire() as conn:
+                user = await conn.fetchrow(
+                    "SELECT * FROM users WHERE telegram_id = $1 AND is_active = true",
+                    telegram_id
+                )
+                return dict(user) if user else None
+        except Exception as e:
+            logger.error(f"Erro ao buscar usuário {telegram_id}: {e}")
+            return None
+
+    async def execute_query_one(self, query, params=None):
+        """Executar query que retorna um registro"""
+        try:
+            async with self.db_pool.acquire() as conn:
+                result = await conn.fetchrow(query, *(params or []))
+                return dict(result) if result else None
+        except Exception as e:
+            logger.error(f"Erro na query: {e}")
+            raise
+
+    async def execute_query(self, query, params=None):
+        """Executar query que retorna múltiplos registros"""
+        try:
+            async with self.db_pool.acquire() as conn:
+                results = await conn.fetch(query, *(params or []))
+                return [dict(row) for row in results] if results else []
+        except Exception as e:
+            logger.error(f"Erro na query: {e}")
+            raise
+
+    async def get_user_accounts(self, user_id):
+        """Buscar contas bancárias do usuário"""
+        try:
+            query = """
+                SELECT * FROM bank_accounts 
+                WHERE user_id = $1 AND is_active = true
+                ORDER BY bank_name
+            """
+            accounts = await self.execute_query(query, (user_id,))
+            
+            # Se não há contas na base local, tentar buscar via Pluggy
+            if not accounts:
+                accounts = await self.sync_pluggy_accounts(user_id)
+            
+            return accounts
+            
+        except Exception as e:
+            logger.error(f"Erro ao buscar contas do usuário {user_id}: {e}")
+            return []
+
+    async def sync_pluggy_accounts(self, user_id):
+        """Sincronizar contas do Pluggy"""
+        try:
+            # Aqui você integraria com o Pluggy API
+            # Por enquanto, retorna lista vazia
+            logger.info(f"Sincronizando contas Pluggy para usuário {user_id}")
+            
+            # Exemplo de como seria:
+            # pluggy_client = PluggyClient()  
+            # accounts = await pluggy_client.get_accounts(user_id)
+            # Salvar as contas na base de dados local
+            
+            return []
+            
+        except Exception as e:
+            logger.error(f"Erro ao sincronizar contas Pluggy: {e}")
+            return []
+
 async def main():
     """Função principal"""
     # Iniciar servidor de health check em thread separada APENAS se não estiver em loop asyncio

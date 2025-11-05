@@ -109,11 +109,57 @@ def main():
             
             # Adicionar funcionalidades financeiras
             try:
-                # Comandos principais do bot original
-                application.add_handler(CommandHandler("saldo", bot.balance_callback))
-                application.add_handler(CommandHandler("cartoes", bot_commands.cards_callback))
-                application.add_handler(CommandHandler("gastos", bot.ai_analysis_callback))
-                application.add_handler(CommandHandler("analise", bot.ai_analysis_callback))
+                # Criar função simples de saldo
+                async def saldo_command(update, context):
+                    """Comando de saldo simplificado"""
+                    user = await bot.get_or_create_user(update.effective_user)
+                    
+                    try:
+                        # Buscar contas do usuário
+                        accounts = await bot.get_user_accounts(user['id'])
+                        
+                        if not accounts:
+                            await update.message.reply_text(
+                                "🏦 Você ainda não conectou nenhuma conta bancária.\n\n"
+                                "Use o menu principal → 🏦 Conectar Banco para vincular seus bancos via Pluggy."
+                            )
+                            return
+                        
+                        text = "💰 *Seus Saldos:*\n\n"
+                        total_balance = 0
+                        
+                        for account in accounts:
+                            text += f"🏦 *{account.get('bank_name', 'Banco')}*\n"
+                            text += f"Tipo: {account.get('account_type', 'Conta')}\n" 
+                            balance = float(account.get('balance', 0))
+                            text += f"Saldo: R$ {balance:,.2f}\n\n"
+                            total_balance += balance
+                        
+                        text += f"💵 *Total Geral: R$ {total_balance:,.2f}*"
+                        
+                        await update.message.reply_text(text, parse_mode='Markdown')
+                        
+                    except Exception as e:
+                        logger.error(f"Erro ao buscar saldo: {e}")
+                        await update.message.reply_text(
+                            "❌ Erro ao consultar saldo. Tente conectar suas contas bancárias primeiro.\n\n"
+                            "Use /start → 🏦 Conectar Banco"
+                        )
+                
+                # Comandos principais
+                application.add_handler(CommandHandler("saldo", saldo_command))
+                
+                # Tentar adicionar outros comandos se existirem
+                try:
+                    application.add_handler(CommandHandler("cartoes", bot_commands.cards_callback))
+                except:
+                    logger.warning("Comando cartões não disponível")
+                
+                try:
+                    application.add_handler(CommandHandler("gastos", bot_commands.ai_analysis_callback))
+                    application.add_handler(CommandHandler("analise", bot_commands.ai_analysis_callback))
+                except:
+                    logger.warning("Comandos de análise não disponíveis")
                 
                 # Funcionalidades de despesas e metas
                 from bot_commands import WAITING_EXPENSE_TITLE, WAITING_EXPENSE_AMOUNT, WAITING_EXPENSE_CATEGORY
